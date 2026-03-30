@@ -46,17 +46,6 @@ export default {
 
     await page.wait(1000)
 
-    if (title) {
-      // React native setter — direct .value assignment doesn't update component state
-      await page.eval((t) => {
-        const input = document.querySelector('input.d-text')
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
-        setter.call(input, t)
-        input.dispatchEvent(new Event('input', { bubbles: true }))
-      }, title)
-      await page.wait(300)
-    }
-
     if (args.content) {
       await page.eval((text) => {
         const editor = document.querySelector('.tiptap.ProseMirror')
@@ -65,6 +54,20 @@ export default {
         document.execCommand('insertText', false, text)
       }, args.content)
       await page.wait(300)
+    }
+
+    if (title) {
+      // Set title AFTER editor operations — editor.focus() would steal focus and reset title
+      // React native setter — direct .value assignment doesn't update component state
+      await page.eval((t) => {
+        const input = document.querySelector('input.d-text')
+        input?.focus()
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
+        setter.call(input, t)
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+      }, title)
+      await page.wait(500)
     }
 
     // Monitor toasts before clicking publish to catch validation errors
