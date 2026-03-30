@@ -6,55 +6,106 @@ export default {
   args: {
     title: { type: "string", default: "" },
     content: { type: "string", default: "" },
-    images: { type: "string" }
+    images: { type: "string", description: "逗号分隔的本地图片路径" }
   },
 
   async run(page, args) {
-    await page.click("上传图文")
+    // Switch to image mode
+    await page.eval(() => {
+      const tabs = Array.from(document.querySelectorAll('span.title'))
+      const imgTab = tabs.find(t => t.textContent.trim() === '上传图文' && t.getBoundingClientRect().x > 0)
+      if (imgTab) imgTab.click()
+      else throw new Error('上传图文 tab not found')
+    })
     await page.wait(2000)
 
-    await page.upload("input.upload-input", args.images)
+    // Verify image upload input appeared
+    const hasInput = await page.eval(() => !!document.querySelector('input[type="file"][accept*="jpg"]'))
+    if (!hasInput) return [{ status: 'error: image mode not activated', url: '' }]
 
-    // Wait for upload to complete
-    const uploaded = await page.eval(() => {
-      return new Promise((resolve) => {
+    // Upload images
+    await page.upload('input[type="file"][accept*="jpg"]', args.images)
+
+    // Wait for upload and editor to be ready
+    const ready = await page.eval(() => {
+      return new Promise(resolve => {
         let attempts = 0
-        const check = () => {
-          const preview = document.querySelector('.upload-item img, .coverImg, [class*="cover"] img, [class*="preview"] img')
-          if (preview || attempts > 60) {
-            resolve(!!preview)
-            return
-          }
+        const check = setInterval(() => {
           attempts++
-          setTimeout(check, 500)
+          const titleInput = document.querySelector('[placeholder*="标题"]')
+          if (titleInput || attempts > 60) {
+            clearInterval(check)
+            resolve(!!titleInput)
+          }
+        }, 500)
+      })
+    })
+    if (!ready) return [{ status: 'error: upload timeout', url: '' }]
+    await page.wait(1000)
+
+    // Fill title via execCommand (works with both input and contenteditable)
+    if (args.title) {
+      await page.eval((title) => {
+        const input = document.querySelector('[placeholder*="标题"]')
+        if (!input) throw new Error('title input not found')
+        input.focus()
+        document.execCommand('selectAll')
+        document.execCommand('insertText', false, title)
+      }, args.title)
+      await page.wait(300)
+
+      // Verify title length (max 20 chars for xiaohongshu)
+      const titleLen = await page.eval(() => {
+        const tip = document.querySelector('.count-tip')
+        return tip ? tip.textContent.trim() : ''
+      })
+      if (titleLen.includes('/')) {
+        const parts = titleLen.split(/\s*\/\s*/)
+        if (parseInt(parts[0]) > parseInt(parts[1])) {
+          return [{ status: `error: title too long (${titleLen})`, url: '' }]
         }
-        check()
+      }
+    }
+
+    // Fill content
+    if (args.content) {
+      await page.eval((content) => {
+        const editor = document.querySelector('[contenteditable="true"]')
+        if (!editor) throw new Error('content editor not found')
+        editor.focus()
+        document.execCommand('selectAll')
+        document.execCommand('insertText', false, content)
+      }, args.content)
+      await page.wait(300)
+    }
+
+    // Click the bottom "发布" button (avoid left nav "发布笔记")
+    const clicked = await page.eval(() => {
+      const btn = Array.from(document.querySelectorAll('button')).find(b =>
+        b.textContent.trim() === '发布' && b.getBoundingClientRect().y > 700 && b.offsetParent !== null
+      )
+      if (btn) { btn.click(); return true }
+      return false
+    })
+    if (!clicked) return [{ status: 'error: publish button not found', url: '' }]
+
+    // Wait and verify
+    const result = await page.eval(() => {
+      return new Promise(resolve => {
+        let attempts = 0
+        const check = setInterval(() => {
+          attempts++
+          if (location.href.includes('success') || location.href.includes('published') || attempts > 30) {
+            clearInterval(check)
+            resolve(location.href)
+          }
+        }, 1000)
       })
     })
 
-    if (!uploaded) {
-      return [{ status: 'upload-timeout', url: '' }]
-    }
-
-    await page.wait(1000)
-
-    if (args.title) {
-      await page.type("input.d-text", args.title)
-      await page.wait(500)
-    }
-
-    if (args.content) {
-      await page.type(".tiptap.ProseMirror", args.content)
-      await page.wait(500)
-    }
-
-    await page.click("发布")
-    await page.wait(5000)
-
-    const url = await page.eval(() => location.href)
     return [{
-      status: url.includes('/publish/publish') ? 'check-browser' : 'published',
-      url
+      status: result.includes('success') ? 'published' : 'check-browser',
+      url: result
     }]
   }
 }
