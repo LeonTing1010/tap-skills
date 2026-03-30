@@ -8,11 +8,15 @@ export default {
   },
 
   async run(page, args) {
-    // Type prompt via CDP keyboard events into ProseMirror editor
-    await page.type('[role="textbox"]', args.prompt)
-    await page.wait(500)
+    // Use Tiptap editor API to insert text — CDP keyboard events cause detach on this page
+    await page.eval((prompt) => {
+      const editor = document.querySelector('.tiptap.ProseMirror')?.editor
+      if (!editor) throw new Error('Tiptap editor not found')
+      editor.commands.clearContent()
+      editor.commands.insertContent(prompt)
+    }, args.prompt)
 
-    // Wait for submit button to become enabled, then JS-click to avoid CDP detach
+    // Wait for React to process the update and enable the submit button
     const submitted = await page.eval(() => {
       return new Promise((resolve) => {
         let attempts = 0
