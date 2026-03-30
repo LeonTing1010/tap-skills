@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "publish",
-  description: "发布小红书图文笔记（需先调用 xiaohongshu/nav_publish）",
+  description: "发布小红书图文笔记",
   columns: ["status", "url"],
   args: {
     title: { type: "string", default: "" },
@@ -12,6 +12,10 @@ export default {
   async run(page, args) {
     // XHS title limit: 20 chars
     const title = args.title.substring(0, 20)
+
+    // Navigate to publish page and wait for it to be ready
+    await page.nav('https://creator.xiaohongshu.com/publish/publish')
+    await page.waitFor('.creator-tab', 10000)
 
     // JS click "上传图文" — CDP pointer (page.click) causes detach on this page
     await page.eval(() => {
