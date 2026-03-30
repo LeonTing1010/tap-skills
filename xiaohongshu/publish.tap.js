@@ -11,7 +11,7 @@ export default {
 
   async run(page, args) {
     // XHS title limit: 20 chars
-    const title = args.title.length > 20 ? args.title.substring(0, 20) : args.title
+    const title = args.title.substring(0, 20)
 
     // JS click "上传图文" — CDP pointer (page.click) causes detach on this page
     await page.eval(() => {
@@ -19,33 +19,28 @@ export default {
         .find(e => e.children.length === 0 && e.innerText?.trim() === '上传图文')
       el?.click()
     })
-    await page.wait(2000)
 
-    await page.upload("input.upload-input", args.images)
+    // Poll for upload input readiness — fixed wait(2000) is unreliable
+    await page.waitFor('input.upload-input', 5000)
 
-    // Wait for upload to complete
+    await page.upload('input.upload-input', args.images)
+
+    // Poll for image preview — confirms upload completed
     const uploaded = await page.eval(() => {
       return new Promise((resolve) => {
-        let attempts = 0
+        let n = 0
         const check = () => {
           const preview = document.querySelector('.upload-item img, .coverImg, [class*="cover"] img, [class*="preview"] img')
-          if (preview || attempts > 60) {
-            resolve(!!preview)
-            return
-          }
-          attempts++
-          setTimeout(check, 500)
+          if (preview || n++ > 60) resolve(!!preview)
+          else setTimeout(check, 500)
         }
         check()
       })
     })
 
-    if (!uploaded) {
-      return [{ status: 'upload-timeout', url: '' }]
-    }
+    if (!uploaded) return [{ status: 'upload-timeout', url: '' }]
 
-    await page.wait(1000)
-
+    // Fill content FIRST — editor.focus() steals focus; title must be set after
     if (args.content) {
       await page.eval((text) => {
         const editor = document.querySelector('.tiptap.ProseMirror')
@@ -56,9 +51,8 @@ export default {
       await page.wait(300)
     }
 
+    // Fill title LAST — React native setter; CDP page.type causes detach
     if (title) {
-      // Set title AFTER editor operations — editor.focus() would steal focus and reset title
-      // React native setter — direct .value assignment doesn't update component state
       await page.eval((t) => {
         const input = document.querySelector('input.d-text')
         input?.focus()
@@ -70,18 +64,13 @@ export default {
       await page.wait(500)
     }
 
-    // Monitor toasts before clicking publish to catch validation errors
+    // Monitor toasts before clicking publish to surface validation errors immediately
     await page.eval(() => {
       window.__tapToast = []
-      window.__tapToastObserver = new MutationObserver(mutations => {
-        for (const m of mutations) {
-          for (const node of m.addedNodes) {
-            if (node.nodeType === 1) {
-              const text = node.innerText?.trim()
-              if (text) window.__tapToast.push(text.substring(0, 100))
-            }
-          }
-        }
+      window.__tapToastObserver = new MutationObserver(ms => {
+        for (const m of ms) for (const n of m.addedNodes)
+          if (n.nodeType === 1 && n.innerText?.trim())
+            window.__tapToast.push(n.innerText.trim().substring(0, 100))
       })
       window.__tapToastObserver.observe(document.body, { childList: true, subtree: true })
     })
@@ -103,13 +92,9 @@ export default {
       return { url, toastErr: toastErr || null }
     })
 
-    if (result.toastErr) {
-      return [{ status: 'error: ' + result.toastErr, url: result.url }]
-    }
+    if (result.toastErr) return [{ status: 'error: ' + result.toastErr, url: result.url }]
 
-    return [{
-      status: result.url.includes('published=true') ? 'published' : 'check-browser',
-      url: result.url
-    }]
+    const published = result.url.includes('published=true') || result.url.includes('/publish/success')
+    return [{ status: published ? 'published' : 'check-browser', url: result.url }]
   }
 }
