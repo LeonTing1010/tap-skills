@@ -20,22 +20,6 @@ export default {
     const scrollCount = Math.min(Math.max(args.scroll || 0, 0), 3);
 
     // --- Helpers ---
-    async function getMainWindow() {
-      const wins = await page.eval(`
-        var se = Application("System Events");
-        var proc = se.processes["WeChat"];
-        var wins = proc.windows();
-        var r = [];
-        for (var i = 0; i < wins.length; i++) {
-          var p = wins[i].position(), s = wins[i].size();
-          r.push({ title: String(wins[i].name()), x: p[0], y: p[1], w: s[0], h: s[1] });
-        }
-        JSON.stringify(r);
-      `);
-      if (!Array.isArray(wins)) return null;
-      return wins.find(w => w.title === "Weixin" || w.title === "微信") || wins[0] || null;
-    }
-
     async function scrollPixels(x, y, px) {
       await page.eval(`
         ObjC.import('CoreGraphics');
@@ -109,16 +93,26 @@ export default {
       return results;
     }
 
-    // --- 1. Activate & clean state ---
-    await page.eval(`Application("WeChat").activate();`);
-    await page.wait(500);
-    await page.keyboard("Escape", "press");
-    await page.wait(300);
-    await page.keyboard("Escape", "press");
-    await page.wait(300);
-
-    // --- 2. Window geometry ---
-    const win = await getMainWindow();
+    // --- 1. Activate + get window in ONE eval (WeChat hides AX windows when not frontmost) ---
+    const win = await page.eval(`
+      Application("WeChat").activate();
+      delay(0.5);
+      var se = Application("System Events");
+      se.keyCode(53); delay(0.2); se.keyCode(53); delay(0.3);
+      var proc = se.processes["WeChat"];
+      var wins = proc.windows();
+      var r = [];
+      for (var i = 0; i < wins.length; i++) {
+        var p = wins[i].position(), s = wins[i].size();
+        r.push({ title: String(wins[i].name()), x: p[0], y: p[1], w: s[0], h: s[1] });
+      }
+      var main = null;
+      for (var i = 0; i < r.length; i++) {
+        if (r[i].title === "Weixin" || r[i].title === "微信") { main = r[i]; break; }
+      }
+      if (!main && r.length > 0) main = r[0];
+      JSON.stringify(main);
+    `);
     if (!win) throw new Error("WeChat main window not found");
 
     // --- 3. Click search bar ---
