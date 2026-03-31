@@ -8,6 +8,7 @@ export default {
   site: "wechat",
   name: "app-search",
   runtime: "macos",
+  app: "WeChat",
   description: "Search inside WeChat macOS app (contacts, chats, articles)",
   columns: ["title", "content"],
   args: {
