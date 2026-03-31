@@ -13,175 +13,149 @@ export default {
   columns: ["title", "content"],
   args: {
     query: { type: "string", required: true, description: "Search query" },
-    scroll: { type: "int", default: 0, description: "Scroll N extra screens (0-3)" },
   },
 
   async run(page, args) {
     const query = args.query;
-    const scrollCount = Math.min(Math.max(args.scroll || 0, 0), 3);
 
-    // --- Helpers ---
-    async function scrollPixels(x, y, px) {
-      await page.eval(`
-        ObjC.import('CoreGraphics');
-        var e = $.CGEventCreateScrollWheelEvent(null, 1, 1, ${-px});
-        $.CGEventSetLocation(e, $.CGPointMake(${x}, ${y}));
-        $.CGEventPost($.kCGHIDEventTap, e);
-      `);
-    }
+    // Single eval: activate → search → wait → extract → cleanup. Zero focus switching.
+    const rawText = await page.eval(`
+      ObjC.import('CoreGraphics');
+      var app = Application.currentApplication();
+      app.includeStandardAdditions = true;
+      var se = Application("System Events");
 
-    function parseResults(text) {
-      const lines = text.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean);
-      const results = [];
-
-      // Related Results
-      const relatedIdx = lines.indexOf("Related Results");
-      const related = [];
-      if (relatedIdx >= 0) {
-        for (let i = relatedIdx + 1; i < lines.length; i++) {
-          const l = lines[i];
-          if (l.includes("Account") || l.includes("More") || /\d+:\d+/.test(l) || /day\(s\)|month|hrs|Yesterday/.test(l)) break;
-          if (l.length > 2 && l.length < 50) related.push(l);
-        }
-      }
-
-      // 大家都在搜
-      const hotIdx = lines.findIndex(l => l.includes("大家都在搜"));
-      const hot = [];
-      if (hotIdx >= 0) {
-        for (let i = hotIdx + 1; i < lines.length; i++) {
-          const l = lines[i];
-          if (/day\(s\)|month|hrs|Yesterday/.test(l) || l.length > 40) break;
-          if (l.length > 2) hot.push(l);
-        }
-      }
-
-      // Mini-programs (name followed by literal "小程序" on next line)
-      const mps = [];
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i] === "小程序" && i > 0 && !related.includes(lines[i - 1])) {
-          mps.push(lines[i - 1]);
-        }
-      }
-
-      // Articles/Videos (lines ending with time markers)
-      const timeRe = /^(\d+ (?:day|month|hr|min|sec)\(s\) ago|Yesterday|Today|\d+ \w+ ago)$/;
-      const durRe = /^\d{2}:\d{2}$/;
-      const articles = [];
-      const seen = new Set();
-      for (let i = 0; i < lines.length; i++) {
-        if (timeRe.test(lines[i])) {
-          const time = lines[i];
-          const source = (i >= 1 && !timeRe.test(lines[i-1]) && lines[i-1].length < 30) ? lines[i-1] : "";
-          let descEnd = source ? i - 2 : i - 1;
-          let title = "";
-          for (let j = descEnd; j >= Math.max(0, descEnd - 4); j--) {
-            if (durRe.test(lines[j]) || /^\d+$/.test(lines[j]) || timeRe.test(lines[j])) continue;
-            if (lines[j].length > 10) { title = lines[j]; break; }
-          }
-          const key = title.slice(0, 30);
-          if (title && !seen.has(key)) {
-            seen.add(key);
-            articles.push(`${title} | ${source} | ${time}`);
-          }
-        }
-      }
-
-      if (related.length) results.push({ title: "关联搜索词", content: related.join("\n") });
-      if (mps.length) results.push({ title: "已有小程序", content: [...new Set(mps)].join("\n") });
-      if (hot.length) results.push({ title: "大家都在搜", content: hot.join("\n") });
-      if (articles.length) results.push({ title: `搜索结果 (${articles.length}条)`, content: articles.join("\n") });
-      return results;
-    }
-
-    // --- 1. Activate + get window in ONE eval (WeChat hides AX windows when not frontmost) ---
-    const win = await page.eval(`
+      // 1. Activate + get window
       Application("WeChat").activate();
       delay(0.5);
-      var se = Application("System Events");
       se.keyCode(53); delay(0.2); se.keyCode(53); delay(0.3);
       var proc = se.processes["WeChat"];
       var wins = proc.windows();
-      var r = [];
-      for (var i = 0; i < wins.length; i++) {
-        var p = wins[i].position(), s = wins[i].size();
-        r.push({ title: String(wins[i].name()), x: p[0], y: p[1], w: s[0], h: s[1] });
+      if (wins.length === 0) throw new Error("WeChat main window not found");
+      var win = wins[0];
+      var pos = win.position();
+
+      // 2. Click search bar
+      var pt = $.CGPointMake(pos[0] + 105, pos[1] + 28);
+      var md = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseDown, pt, 0);
+      $.CGEventPost($.kCGHIDEventTap, md);
+      delay(0.05);
+      var mu = $.CGEventCreateMouseEvent(null, $.kCGEventLeftMouseUp, pt, 0);
+      $.CGEventPost($.kCGHIDEventTap, mu);
+      delay(0.8);
+
+      // 3. Paste query via clipboard
+      app.setTheClipboardTo(${JSON.stringify(query)});
+      delay(0.1);
+      var vd = $.CGEventCreateKeyboardEvent(null, 9, true);
+      $.CGEventSetFlags(vd, $.kCGEventFlagMaskCommand);
+      $.CGEventPost($.kCGHIDEventTap, vd);
+      delay(0.03);
+      var vu = $.CGEventCreateKeyboardEvent(null, 9, false);
+      $.CGEventSetFlags(vu, $.kCGEventFlagMaskCommand);
+      $.CGEventPost($.kCGHIDEventTap, vu);
+      delay(1.5);
+
+      // 4. Enter → 搜一搜
+      var ed = $.CGEventCreateKeyboardEvent(null, 36, true);
+      $.CGEventPost($.kCGHIDEventTap, ed);
+      delay(0.03);
+      var eu = $.CGEventCreateKeyboardEvent(null, 36, false);
+      $.CGEventPost($.kCGHIDEventTap, eu);
+
+      // 5. Wait for search results page
+      for (var i = 0; i < 10; i++) {
+        delay(1);
+        Application("WeChat").activate();
+        var ws = proc.windows();
+        var found = false;
+        for (var j = 0; j < ws.length; j++) {
+          if (String(ws[j].name()).indexOf("Search") >= 0) { found = true; break; }
+        }
+        if (found) break;
       }
-      var main = null;
-      for (var i = 0; i < r.length; i++) {
-        if (r[i].title === "Weixin" || r[i].title === "微信") { main = r[i]; break; }
-      }
-      if (!main && r.length > 0) main = r[0];
-      JSON.stringify(main);
+
+      // 6. Select All + Copy
+      app.setTheClipboardTo("");
+      delay(0.1);
+      proc.menuBars[0].menuBarItems["Edit"].menus[0].menuItems["Select All"].click();
+      delay(0.5);
+      proc.menuBars[0].menuBarItems["Edit"].menus[0].menuItems["Copy"].click();
+      delay(0.5);
+      var result = String(app.theClipboard());
+
+      // 7. Cleanup: Escape back to chat
+      se.keyCode(53); delay(0.2); se.keyCode(53); delay(0.2); se.keyCode(53);
+
+      result;
     `);
-    if (!win) throw new Error("WeChat main window not found");
 
-    // --- 3. Click search bar ---
-    await page.pointer(Math.round(win.x + 105), Math.round(win.y + 28), "click");
-    await page.wait(800);
+    // Parse structured results
+    const text = typeof rawText === "string" ? rawText : String(rawText || "");
+    if (!text) return [{ title: query, content: "no results" }];
 
-    // --- 4. Paste query (clipboard for CJK) ---
-    await page.keyboard(query, "type");
-    await page.wait(1500);
+    const lines = text.split(/[\r\n]+/).map(l => l.trim()).filter(Boolean);
+    const results = [];
 
-    // --- 5. Enter → 搜一搜 ---
-    await page.keyboard("Enter", "press");
-
-    // Wait for search results page (window title changes to contain "Search")
-    for (let attempt = 0; attempt < 10; attempt++) {
-      await page.wait(1000);
-      const titles = await page.eval(`
-        Application("WeChat").activate(); delay(0.2);
-        var se = Application("System Events");
-        var wins = se.processes["WeChat"].windows();
-        var t = [];
-        for (var i = 0; i < wins.length; i++) t.push(String(wins[i].name()));
-        JSON.stringify(t);
-      `);
-      if (Array.isArray(titles) && titles.some(t => t.includes("Search") || t.includes("搜索"))) break;
+    // Related Results
+    const relatedIdx = lines.indexOf("Related Results");
+    const related = [];
+    if (relatedIdx >= 0) {
+      for (let i = relatedIdx + 1; i < lines.length; i++) {
+        const l = lines[i];
+        if (l.includes("Account") || l.includes("More") || /\d+:\d+/.test(l) || /day\(s\)|month|hrs|Yesterday/.test(l)) break;
+        if (l.length > 2 && l.length < 50) related.push(l);
+      }
     }
 
-    // --- 6. Extract text via page.copyAll() ---
-    const rawText = (await page.copyAll()) || "";
-    const text = typeof rawText === "string" ? rawText : String(rawText);
-    const results = parseResults(text);
+    // 大家都在搜
+    const hotIdx = lines.findIndex(l => l.includes("大家都在搜"));
+    const hot = [];
+    if (hotIdx >= 0) {
+      for (let i = hotIdx + 1; i < lines.length; i++) {
+        const l = lines[i];
+        if (/day\(s\)|month|hrs|Yesterday/.test(l) || l.length > 40) break;
+        if (l.length > 2) hot.push(l);
+      }
+    }
 
-    // --- 7. Scroll + extract more (optional) ---
-    if (scrollCount > 0 && win) {
-      const contentH = win.h - 80;
-      const scrollPx = Math.round(contentH * 0.85);
-      const sx = Math.round(win.x + win.w * 0.6);
-      const sy = Math.round(win.y + 80 + contentH * 0.5);
+    // Mini-programs
+    const mps = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i] === "小程序" && i > 0 && !related.includes(lines[i - 1])) {
+        mps.push(lines[i - 1]);
+      }
+    }
 
-      for (let i = 0; i < scrollCount; i++) {
-        await scrollPixels(sx, sy, scrollPx);
-        await page.wait(2000);
-        const moreText = (await page.copyAll()) || "";
-        const more = String(moreText);
-        if (more.length > 100) {
-          results.push({ title: `screen ${i + 2}`, content: more.slice(0, 4000) });
+    // Articles/Videos
+    const timeRe = /^(\d+ (?:day|month|hr|min|sec)\(s\) ago|Yesterday|Today|\d+ \w+ ago)$/;
+    const durRe = /^\d{2}:\d{2}$/;
+    const seen = new Set();
+    const articles = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (timeRe.test(lines[i])) {
+        const time = lines[i];
+        const source = (i >= 1 && !timeRe.test(lines[i-1]) && lines[i-1].length < 30) ? lines[i-1] : "";
+        let descEnd = source ? i - 2 : i - 1;
+        let title = "";
+        for (let j = descEnd; j >= Math.max(0, descEnd - 4); j--) {
+          if (durRe.test(lines[j]) || /^\d+$/.test(lines[j]) || timeRe.test(lines[j])) continue;
+          if (lines[j].length > 10) { title = lines[j]; break; }
+        }
+        const key = title.slice(0, 30);
+        if (title && !seen.has(key)) {
+          seen.add(key);
+          articles.push(`${title} | ${source} | ${time}`);
         }
       }
     }
 
-    // Fallback if nothing parsed
-    if (results.length === 0 && text.length > 0) {
-      results.push({ title: `${query} — 原始数据`, content: text.slice(0, 4000) });
-    }
+    if (related.length) results.push({ title: "关联搜索词", content: related.join("\n") });
+    if (mps.length) results.push({ title: "已有小程序", content: [...new Set(mps)].join("\n") });
+    if (hot.length) results.push({ title: "大家都在搜", content: hot.join("\n") });
+    if (articles.length) results.push({ title: `搜索结果 (${articles.length}条)`, content: articles.join("\n") });
+    if (results.length === 0) results.push({ title: query, content: text.slice(0, 4000) });
 
     return results;
-  },
-
-  async cleanup(page) {
-    // Escape out of search results back to chat list.
-    // Do NOT use Cmd+W — search is a tab in the main window, Cmd+W closes everything.
-    await page.eval(`
-      Application("WeChat").activate();
-      delay(0.2);
-      var se = Application("System Events");
-      se.keyCode(53); delay(0.3);
-      se.keyCode(53); delay(0.3);
-      se.keyCode(53);
-    `);
   },
 };
