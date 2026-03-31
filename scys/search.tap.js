@@ -2,6 +2,7 @@ export default {
   site: "scys",
   name: "search",
   description: "搜索生财有术内容，返回标题、作者、链接、摘要",
+  columns: ["title", "author", "url", "badge", "date", "preview"],
   args: {
     keyword: { type: "string", description: "搜索关键词" }
   },

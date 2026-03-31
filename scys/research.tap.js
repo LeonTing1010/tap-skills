@@ -2,6 +2,7 @@ export default {
   site: "scys",
   name: "research",
   description: "搜索生财有术并提取飞书文档链接（组合 search + article tap）",
+  columns: ["title", "feishu", "url", "badge", "date", "preview"],
   args: {
     keyword: { type: "string", description: "搜索关键词" },
     limit:   { type: "int",    description: "提取飞书链接的文章数量，默认5", required: false }
