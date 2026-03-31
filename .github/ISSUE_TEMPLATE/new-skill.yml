@@ -1,0 +1,35 @@
+name: New Skill Request
+description: Request a skill for a site or app
+labels: ["enhancement"]
+body:
+  - type: input
+    id: site
+    attributes:
+      label: Site / App
+      description: URL or app name
+      placeholder: "https://example.com or 'Apple Music'"
+    validations:
+      required: true
+  - type: input
+    id: capability
+    attributes:
+      label: What should it do?
+      placeholder: "Extract trending posts / Post content / Search"
+    validations:
+      required: true
+  - type: dropdown
+    id: strategy
+    attributes:
+      label: Likely strategy
+      description: If you know — otherwise leave blank
+      options:
+        - API (site has a JSON endpoint)
+        - DOM (needs page scraping)
+        - SSR (server-rendered data in page source)
+        - macOS (native app via Accessibility API)
+        - Not sure
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: API endpoints you found, login required, etc.

@@ -1,0 +1,35 @@
+name: Broken Skill
+description: Report a skill that no longer works
+labels: ["bug"]
+body:
+  - type: input
+    id: skill
+    attributes:
+      label: Skill
+      description: "site/name (e.g. github/trending)"
+      placeholder: "site/name"
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Chrome Extension
+        - Playwright
+        - macOS
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error output
+      description: Paste the output of `tap <site> <name>`
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: What changed on the site? Screenshots welcome.
