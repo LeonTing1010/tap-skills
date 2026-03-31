@@ -11,6 +11,7 @@
 export default {
   site: "macos",
   name: "scroll-capture",
+  runtime: "macos",
   description: "Scrolling screenshots of frontmost macOS app (pixel-precise, max 3 screens)",
   columns: ["screen", "file"],
   args: {
