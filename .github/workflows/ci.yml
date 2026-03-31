@@ -13,6 +13,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Validate skill format (984 constraints)
+          node-version: 24
+      - name: Validate skill format
         run: node test/tap-format.test.mjs

@@ -12,7 +12,7 @@
  *     - Must NOT have: extract()
  *     - Must have: columns (can't infer without running)
  *
- * Run: node extension/test/tap-format.test.mjs
+ * Run: node test/tap-format.test.mjs
  */
 
 import { strict as assert } from 'node:assert'
@@ -27,28 +27,31 @@ const VALID_ARG_TYPES = ['string', 'int', 'float', 'boolean']
 
 let passed = 0
 let failed = 0
+const failures = []   // collect all failures for summary
 
-function test(name, fn) {
+function test(tapId, rule, fn) {
   try {
     fn()
     passed++
-    console.log(`  \x1b[32m✓\x1b[0m ${name}`)
+    console.log(`  \x1b[32m✓\x1b[0m ${rule}`)
   } catch (e) {
     failed++
-    console.log(`  \x1b[31m✗\x1b[0m ${name}`)
+    console.log(`  \x1b[31m✗\x1b[0m ${rule}`)
     console.log(`    ${e.message}`)
+    failures.push({ tap: tapId, rule, message: e.message })
   }
 }
 
-async function testAsync(name, fn) {
+async function testAsync(tapId, rule, fn) {
   try {
     await fn()
     passed++
-    console.log(`  \x1b[32m✓\x1b[0m ${name}`)
+    console.log(`  \x1b[32m✓\x1b[0m ${rule}`)
   } catch (e) {
     failed++
-    console.log(`  \x1b[31m✗\x1b[0m ${name}`)
+    console.log(`  \x1b[31m✗\x1b[0m ${rule}`)
     console.log(`    ${e.message}`)
+    failures.push({ tap: tapId, rule, message: e.message })
   }
 }
 
@@ -73,15 +76,16 @@ console.log('\n.tap.js format constraints\n')
 
 const tapFiles = await findTapFiles(TAPS_DIR)
 
-test('at least one .tap.js file exists', () => {
+test('global', 'at least one .tap.js file exists', () => {
   assert(tapFiles.length > 0, `no .tap.js files found in ${TAPS_DIR}`)
 })
 
 for (const { site, name, path } of tapFiles) {
-  console.log(`\n  ${site}/${name}.tap.js`)
+  const id = `${site}/${name}`
+  console.log(`\n  ${id}.tap.js`)
 
   let mod
-  await testAsync(`  loads as ES module`, async () => {
+  await testAsync(id, `loads as ES module`, async () => {
     mod = await import(pathToFileURL(path))
     assert(mod.default, 'must have default export')
   })
@@ -94,34 +98,34 @@ for (const { site, name, path } of tapFiles) {
 
   // ===== COMMON CONSTRAINTS (both formats) =====
 
-  test(`  [common] has site`, () => {
+  test(id, `[common] has site`, () => {
     assert.equal(typeof tap.site, 'string', 'site must be string')
   })
 
-  test(`  [common] has name`, () => {
+  test(id, `[common] has name`, () => {
     assert.equal(typeof tap.name, 'string', 'name must be string')
   })
 
-  test(`  [common] has description`, () => {
+  test(id, `[common] has description`, () => {
     assert.equal(typeof tap.description, 'string', 'description is required')
   })
 
-  test(`  [common] site matches directory (${tap.site} === ${site})`, () => {
+  test(id, `[common] site matches directory (${tap.site} === ${site})`, () => {
     assert.equal(tap.site, site)
   })
 
-  test(`  [common] name matches filename (${tap.name} === ${name})`, () => {
+  test(id, `[common] name matches filename (${tap.name} === ${name})`, () => {
     assert.equal(tap.name, name)
   })
 
-  test(`  [common] has exactly one of run() or extract()`, () => {
+  test(id, `[common] has exactly one of run() or extract()`, () => {
     assert(hasRun || hasExtract, 'must have run() or extract()')
     assert(!(hasRun && hasExtract), 'must not have both run() and extract()')
   })
 
   // args validation (both formats)
   if (tap.args) {
-    test(`  [common] args have valid types`, () => {
+    test(id, `[common] args have valid types`, () => {
       for (const [key, spec] of Object.entries(tap.args)) {
         assert(spec.type, `arg '${key}' missing type`)
         assert(VALID_ARG_TYPES.includes(spec.type), `arg '${key}' has invalid type '${spec.type}'`)
@@ -131,7 +135,7 @@ for (const { site, name, path } of tapFiles) {
 
   // health validation (both formats)
   if (tap.health) {
-    test(`  [common] health contract is valid`, () => {
+    test(id, `[common] health contract is valid`, () => {
       if (tap.health.min_rows !== undefined) {
         assert.equal(typeof tap.health.min_rows, 'number')
         assert(tap.health.min_rows > 0, 'min_rows must be > 0')
@@ -150,8 +154,7 @@ for (const { site, name, path } of tapFiles) {
 
   // requires validation (optional — declares protocol version dependency)
   if (tap.requires) {
-    test(`  [common] requires is valid semver range`, () => {
-      // Why: taps declare minimum protocol version for runtime compatibility negotiation
+    test(id, `[common] requires is valid semver range`, () => {
       assert.equal(typeof tap.requires, 'string', 'requires must be a semver string (e.g. ">=1.0.0")')
       assert(/^[><=^~]*\d+\.\d+\.\d+/.test(tap.requires), `requires "${tap.requires}" must be semver range`)
     })
@@ -159,7 +162,7 @@ for (const { site, name, path } of tapFiles) {
 
   // No chrome.* direct access (both formats)
   const checkFn = tap.run || tap.extract
-  test(`  [common] ${format}() body does not reference chrome.* directly`, () => {
+  test(id, `[common] ${format}() body does not reference chrome.* directly`, () => {
     const src = checkFn.toString()
     assert(!src.includes('chrome.tabs'), 'must not reference chrome.tabs — use page API')
     assert(!src.includes('chrome.scripting'), 'must not reference chrome.scripting — use page API')
@@ -169,33 +172,33 @@ for (const { site, name, path } of tapFiles) {
   // ===== EXTRACT-FORMAT CONSTRAINTS =====
 
   if (hasExtract) {
-    test(`  [extract] has url (string or function)`, () => {
+    test(id, `[extract] has url (string or function)`, () => {
       const valid = (typeof tap.url === 'string' && tap.url.length > 0) || typeof tap.url === 'function'
       assert(valid, 'extract-format requires url (string or function)')
     })
 
-    test(`  [extract] must not have columns (runtime infers)`, () => {
+    test(id, `[extract] must not have columns (runtime infers)`, () => {
       assert(tap.columns === undefined, 'extract-format must not declare columns — runtime infers from extract() return')
     })
 
-    test(`  [extract] must not have args.limit (runtime provides)`, () => {
+    test(id, `[extract] must not have args.limit (runtime provides)`, () => {
       assert(!tap.args?.limit, 'extract-format must not declare args.limit — runtime provides default limit=20')
     })
 
-    test(`  [extract] must not have wait (runtime adaptive)`, () => {
+    test(id, `[extract] must not have wait (runtime adaptive)`, () => {
       assert(tap.wait === undefined, 'extract-format must not declare wait — runtime uses adaptive retry')
     })
 
     // waitFor must be a string if present
     if (tap.waitFor !== undefined) {
-      test(`  [extract] waitFor is a string (CSS selector)`, () => {
+      test(id, `[extract] waitFor is a string (CSS selector)`, () => {
         assert.equal(typeof tap.waitFor, 'string', 'waitFor must be a CSS selector string')
       })
     }
 
     // timeout must be a number if present
     if (tap.timeout !== undefined) {
-      test(`  [extract] timeout is a number`, () => {
+      test(id, `[extract] timeout is a number`, () => {
         assert.equal(typeof tap.timeout, 'number', 'timeout must be a number (milliseconds)')
       })
     }
@@ -204,9 +207,11 @@ for (const { site, name, path } of tapFiles) {
   // ===== RUN-FORMAT CONSTRAINTS =====
 
   if (hasRun) {
-    test(`  [run] has columns (non-empty string array)`, () => {
-      assert(Array.isArray(tap.columns), 'run-format requires columns array')
-      assert(tap.columns.length > 0, 'columns must not be empty')
+    test(id, `[run] has columns (non-empty string array)`, () => {
+      assert(Array.isArray(tap.columns),
+        `run-format requires columns array — add columns: ["field1", "field2"] to ${id}`)
+      assert(tap.columns.length > 0,
+        `columns must not be empty — declare at least one column in ${id}`)
       for (const col of tap.columns) {
         assert.equal(typeof col, 'string', `column must be string, got ${typeof col}`)
       }
@@ -216,16 +221,28 @@ for (const { site, name, path } of tapFiles) {
     const body = tap.run.toString()
     const tapCalls = [...body.matchAll(/page\.tap\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']/g)]
     for (const [, refSite, refName] of tapCalls) {
-      test(`  [composition] page.tap("${refSite}", "${refName}") references existing tap`, () => {
+      test(id, `[composition] page.tap("${refSite}", "${refName}") references existing tap`, () => {
         const refPath = join(TAPS_DIR, refSite, `${refName}.tap.js`)
         const exists = existsSync(refPath)
         assert(exists,
-          `page.tap("${refSite}", "${refName}") references non-existent tap at ${refPath} — composition requires all sub-taps to exist on disk`)
+          `${id} calls page.tap("${refSite}", "${refName}") but ${refSite}/${refName}.tap.js does not exist — composition will fail at runtime`)
       })
     }
   }
 }
 
 // --- Summary ---
-console.log(`\n${passed + failed} constraints, ${passed} passed, ${failed} failed\n`)
+
+console.log(`\n${'─'.repeat(50)}`)
+console.log(`${passed + failed} constraints, ${passed} passed, ${failed} failed`)
+
+if (failures.length > 0) {
+  console.log(`\n\x1b[31mFailed:\x1b[0m\n`)
+  for (const f of failures) {
+    console.log(`  \x1b[31m✗\x1b[0m \x1b[1m${f.tap}\x1b[0m → ${f.rule}`)
+    console.log(`    ${f.message}\n`)
+  }
+}
+
+console.log('')
 process.exit(failed > 0 ? 1 : 0)
