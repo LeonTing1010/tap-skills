@@ -165,23 +165,14 @@ export default {
   },
 
   async cleanup(page) {
-    // Close search tab only if it exists, then Escape
+    // Escape out of search results back to chat list.
+    // Do NOT use Cmd+W — search is a tab in the main window, Cmd+W closes everything.
     await page.eval(`
-      var se = Application("System Events");
-      var proc = se.processes["WeChat"];
       Application("WeChat").activate();
       delay(0.2);
-      var wins = proc.windows();
-      for (var i = 0; i < wins.length; i++) {
-        var t = String(wins[i].name());
-        if (t.includes("Search") || t.includes("搜索") || t.includes("搜一搜")) {
-          se.keystroke("w", {using: "command down"});
-          break;
-        }
-      }
-      delay(0.3);
-      se.keyCode(53);
-      delay(0.2);
+      var se = Application("System Events");
+      se.keyCode(53); delay(0.3);
+      se.keyCode(53); delay(0.3);
       se.keyCode(53);
     `);
   },
