@@ -126,7 +126,20 @@ export default {
 
     // --- 5. Enter → 搜一搜 ---
     await page.keyboard("Enter", "press");
-    await page.wait(5000);
+
+    // Wait for search results page (window title changes to contain "Search")
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await page.wait(1000);
+      const titles = await page.eval(`
+        Application("WeChat").activate(); delay(0.2);
+        var se = Application("System Events");
+        var wins = se.processes["WeChat"].windows();
+        var t = [];
+        for (var i = 0; i < wins.length; i++) t.push(String(wins[i].name()));
+        JSON.stringify(t);
+      `);
+      if (Array.isArray(titles) && titles.some(t => t.includes("Search") || t.includes("搜索"))) break;
+    }
 
     // --- 6. Extract text via page.copyAll() ---
     const rawText = (await page.copyAll()) || "";
