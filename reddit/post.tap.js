@@ -18,47 +18,48 @@ export default {
     const sub = args.subreddit.replace(/^r\//, "")
     const kind = args.link ? "link" : "self"
 
-    // === Strategy 1: Reddit API with modhash (fast, no navigation) ===
-    try {
-      const meRes = await page.fetch("https://www.reddit.com/api/me.json", {
-        credentials: "include"
-      })
-      const me = JSON.parse(meRes.body)
-      const modhash = me?.data?.modhash || ""
-
-      const res = await page.fetch("https://www.reddit.com/api/submit", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          api_type: "json",
-          kind,
-          sr: sub,
-          title: args.title,
-          uh: modhash,
-          ...(args.link ? { url: args.link, resubmit: "true" } : {}),
-          ...(args.content ? { text: args.content } : {})
-        }).toString()
-      })
-      const data = JSON.parse(res.body)
-      if (data.json?.data?.url) {
-        return [{ status: "posted", url: data.json.data.url }]
-      }
-      const errors = data.json?.errors
-      if (errors?.length) {
-        const errMsg = errors.map(e => e.join(": ")).join("; ")
-        if (!errMsg.includes("flair")) {
-          return [{ status: "error", url: errMsg }]
-        }
-      }
-    } catch (_) {
-      // API failed, fall through to form
-    }
-
-    // === Strategy 2: old.reddit.com form (no shadow DOM) ===
+    // Navigate to old.reddit.com first (get modhash + cookie context)
     const qs = args.link ? "" : "?selftext=true"
     await page.nav(`https://old.reddit.com/r/${sub}/submit${qs}`)
 
+    // === Strategy 1: API from old.reddit.com page context ===
+    const apiResult = await page.eval(`
+      (async () => {
+        const modhash = document.querySelector('input[name="uh"]')?.value || '';
+        if (!modhash) return JSON.stringify({ error: 'not logged in' });
+
+        const res = await fetch("/api/submit", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            api_type: "json",
+            kind: ${JSON.stringify(kind)},
+            sr: ${JSON.stringify(sub)},
+            title: ${JSON.stringify(args.title)},
+            uh: modhash,
+            ${args.link ? `url: ${JSON.stringify(args.link)}, resubmit: "true",` : ""}
+            ${args.content ? `text: ${JSON.stringify(args.content)},` : ""}
+          }).toString()
+        });
+        const data = await res.json();
+        if (data.json?.data?.url) return JSON.stringify({ url: data.json.data.url });
+        const errors = data.json?.errors;
+        if (errors?.length) return JSON.stringify({ error: errors.map(e => e.join(": ")).join("; ") });
+        return JSON.stringify({ error: "unknown" });
+      })()
+    `)
+
+    try {
+      const parsed = JSON.parse(apiResult)
+      if (parsed.url) return [{ status: "posted", url: parsed.url }]
+      // CAPTCHA or flair error — fall through to form
+      if (parsed.error && !parsed.error.includes("CAPTCHA") && !parsed.error.includes("flair")) {
+        return [{ status: "error", url: parsed.error }]
+      }
+    } catch (_) {}
+
+    // === Strategy 2: old.reddit.com form (already on page) ===
     await page.fill('[name="title"]', args.title)
 
     if (args.link) {
