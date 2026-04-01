@@ -161,12 +161,69 @@ for (const { site, name, path } of tapFiles) {
   }
 
   // No chrome.* direct access (both formats)
-  const checkFn = tap.run || tap.extract
+  const checkFn = tap.run || tap.extract || tap.transform
   test(id, `[common] ${format}() body does not reference chrome.* directly`, () => {
     const src = checkFn.toString()
     assert(!src.includes('chrome.tabs'), 'must not reference chrome.tabs — use page API')
     assert(!src.includes('chrome.scripting'), 'must not reference chrome.scripting — use page API')
     assert(!src.includes('chrome.debugger'), 'must not reference chrome.debugger — use page API')
+  })
+
+  // ===== SECURITY CONSTRAINTS =====
+
+  const fullSource = (await import('node:fs/promises')).readFileSync
+    ? undefined  // readFileSync not available, use src below
+    : undefined
+  const src = checkFn.toString()
+
+  test(id, `[security] no eval() — use tap.eval() instead`, () => {
+    // Match eval( but not page.eval( or tap.eval(
+    const lines = src.split('\n')
+    for (const line of lines) {
+      if (line.trimStart().startsWith('//')) continue
+      if (/\beval\s*\(/.test(line) && !line.includes('page.eval') && !line.includes('tap.eval')) {
+        assert.fail(`eval() found — use tap.eval() for page context execution`)
+      }
+    }
+  })
+
+  test(id, `[security] no new Function()`, () => {
+    assert(!/new\s+Function\s*\(/.test(src), 'new Function() not allowed — logic must be in tap source')
+  })
+
+  test(id, `[security] no base64 decoding (atob)`, () => {
+    assert(!/\batob\s*\(/.test(src), 'atob() not allowed — tap code must be readable')
+  })
+
+  test(id, `[security] no WebSocket`, () => {
+    assert(!/new\s+WebSocket\s*\(/.test(src), 'WebSocket not allowed — use tap.fetch()')
+  })
+
+  test(id, `[security] no XMLHttpRequest`, () => {
+    assert(!/XMLHttpRequest/.test(src), 'XMLHttpRequest not allowed — use tap.fetch()')
+  })
+
+  test(id, `[security] no dynamic import()`, () => {
+    const lines = src.split('\n')
+    for (const line of lines) {
+      if (/\bimport\s*\(/.test(line) && !/export\s+default/.test(line) && !/ObjC\.import/.test(line)) {
+        assert.fail('dynamic import() not allowed — taps must be self-contained')
+      }
+    }
+  })
+
+  test(id, `[security] fetch URLs related to site "${site}"`, () => {
+    const fetchUrls = [...src.matchAll(/fetch\s*\(\s*["'`](https?:\/\/[^"'`\s]+)["'`]/g)]
+    for (const [, url] of fetchUrls) {
+      try {
+        const hostname = new URL(url).hostname.toLowerCase()
+        const siteLower = site.toLowerCase()
+        const isSiteRelated = hostname.includes(siteLower) || siteLower.includes(hostname.replace('www.', '').split('.')[0])
+        const isCommonCdn = /^(cdn|static|assets|api|img|media)\./i.test(hostname)
+        assert(isSiteRelated || isCommonCdn,
+          `fetch to "${hostname}" — tap for "${site}" should only access ${site}-related URLs`)
+      } catch { /* non-parseable URL, skip */ }
+    }
   })
 
   // ===== EXTRACT-FORMAT CONSTRAINTS =====
