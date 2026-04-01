@@ -8,14 +8,14 @@ export default {
   },
   health: { min_rows: 3, non_empty: ["content"] },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (args?.url) {
-      await page.nav(args.url)
-      await page.eval('new Promise(r => setTimeout(r, 2000))')
+      await tap.nav(args.url)
+      await tap.eval('new Promise(r => setTimeout(r, 2000))')
     }
 
     // 提取文章元数据 + 正文 + 飞书链接
-    const meta = await page.eval(() => {
+    const meta = await tap.eval(() => {
       const postContent = document.querySelector(".post-content")
       const feishuAnchor = document.querySelector('a[href*="feishu.cn"], a[href*="lark.com"]')
       const likeEl = document.querySelector('[class*="like"]')
@@ -46,9 +46,9 @@ export default {
     // 跟进飞书文档，读取全文
     if (meta.feishuUrl) {
       results.push({ type: "feishu_link", content: meta.feishuUrl, meta: "fetching feishu doc..." })
-      await page.nav(meta.feishuUrl)
-      await page.eval('new Promise(r => setTimeout(r, 3000))')
-      const docRows = await page.tap("feishu", "doc")
+      await tap.nav(meta.feishuUrl)
+      await tap.eval('new Promise(r => setTimeout(r, 3000))')
+      const docRows = await tap.run("feishu", "doc")
       for (const row of docRows) {
         results.push({ type: "doc_" + row.type, content: row.content, meta: row.level })
       }

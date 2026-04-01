@@ -8,8 +8,8 @@ export default {
   description: "Today's calendar events",
   columns: ["title", "time", "location", "calendar", "notes"],
 
-  async run(page) {
-    const events = await page.eval(`
+  async run(tap) {
+    const events = await tap.eval(`
       var cal = Application("Calendar");
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);

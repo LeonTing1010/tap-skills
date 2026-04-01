@@ -5,15 +5,15 @@ export default {
   columns: ["status", "url"],
   args: {},
 
-  async run(page) {
-    await page.nav("https://telegra.ph")
-    await page.wait(2000)
+  async run(tap) {
+    await tap.nav("https://telegra.ph")
+    await tap.wait(2000)
 
     // Activate Quill editor
-    await page.eval(() => { quill.enable(true) })
-    await page.wait(500)
+    await tap.eval(() => { quill.enable(true) })
+    await tap.wait(500)
 
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     return [{ status: "ready", url }]
   }
 }

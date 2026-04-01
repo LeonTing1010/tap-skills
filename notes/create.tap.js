@@ -13,8 +13,8 @@ export default {
     folder: { type: "string", default: "Notes", description: "Target folder" },
   },
 
-  async run(page, args) {
-    const result = await page.eval(`
+  async run(tap, args) {
+    const result = await tap.eval(`
       var app = Application("Notes");
       var title = ${JSON.stringify(args.title)};
       var body = ${JSON.stringify(args.body)};

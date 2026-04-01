@@ -7,9 +7,9 @@ export default {
     prompt: { type: "string" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     // Use Tiptap editor API to insert text — CDP keyboard events cause detach on this page
-    await page.eval((prompt) => {
+    await tap.eval((prompt) => {
       const editor = document.querySelector('.tiptap.ProseMirror')?.editor
       if (!editor) throw new Error('Tiptap editor not found')
       editor.commands.clearContent()
@@ -17,7 +17,7 @@ export default {
     }, args.prompt)
 
     // Wait for React to process the update and enable the submit button
-    const submitted = await page.eval(() => {
+    const submitted = await tap.eval(() => {
       return new Promise((resolve) => {
         let attempts = 0
         const tryClick = () => {

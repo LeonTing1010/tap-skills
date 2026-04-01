@@ -7,26 +7,26 @@ export default {
     comment: { type: "string" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.comment) {
       return [{ status: "error", comment: "missing comment arg" }]
     }
 
     // Click the comment button to open comment panel
-    await page.click("button.CommentButton")
-    await page.wait(1000)
+    await tap.click("button.CommentButton")
+    await tap.wait(1000)
 
     // Click the comment input area (contenteditable)
-    await page.click("[contenteditable]")
-    await page.wait(500)
+    await tap.click("[contenteditable]")
+    await tap.wait(500)
 
     // Type comment
-    await page.type("[contenteditable]", args.comment)
-    await page.wait(500)
+    await tap.type("[contenteditable]", args.comment)
+    await tap.wait(500)
 
     // Submit comment
-    await page.click("button.CommentEditorV2-singleButton")
-    await page.wait(2000)
+    await tap.click("button.CommentEditorV2-singleButton")
+    await tap.wait(2000)
 
     return [{ status: "sent", comment: args.comment }]
   }

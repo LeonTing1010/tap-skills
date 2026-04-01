@@ -8,17 +8,17 @@ export default {
     content: { type: "string" }
   },
 
-  async run(page, args) {
-    await page.type("input.d-text", args.title)
-    await page.wait(500)
+  async run(tap, args) {
+    await tap.type("input.d-text", args.title)
+    await tap.wait(500)
 
-    await page.type(".tiptap.ProseMirror", args.content)
-    await page.wait(500)
+    await tap.type(".tiptap.ProseMirror", args.content)
+    await tap.wait(500)
 
-    await page.click("发布")
-    await page.wait(5000)
+    await tap.click("发布")
+    await tap.wait(5000)
 
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     return [{
       status: url.includes('/publish/publish') ? 'check-browser' : 'published',
       url

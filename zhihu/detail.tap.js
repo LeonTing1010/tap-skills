@@ -6,8 +6,8 @@ export default {
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(page) {
-    const items = await page.eval(async () => {
+  async run(tap) {
+    const items = await tap.eval(async () => {
       const results = []
       const url = location.href
 

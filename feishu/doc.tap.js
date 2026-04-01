@@ -6,8 +6,8 @@ export default {
   args: {},
   health: { min_rows: 5, non_empty: ["content"] },
 
-  async run(page) {
-    const items = await page.eval(async () => {
+  async run(tap) {
+    const items = await tap.eval(async () => {
       // Step 1: 从 block_map 直接提取已加载的块（最优雅路径）
       const blockMap = window.DATA?.clientVars?.data?.block_map || {}
       const hasMore = window.DATA?.clientVars?.data?.has_more

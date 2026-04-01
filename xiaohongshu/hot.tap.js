@@ -6,15 +6,15 @@ export default {
   args: { limit: { type: "int", default: 20 } },
   health: { min_rows: 5, non_empty: ["title"] },
 
-  async run(page, args) {
-    await page.nav("https://www.xiaohongshu.com/explore")
-    await page.wait(4000)
+  async run(tap, args) {
+    await tap.nav("https://www.xiaohongshu.com/explore")
+    await tap.wait(4000)
 
     // CDP native click to reveal trending searches
-    await page.click("input[placeholder*='搜索']")
-    await page.wait(2000)
+    await tap.click("input[placeholder*='搜索']")
+    await tap.wait(2000)
 
-    const items = await page.eval(() => {
+    const items = await tap.eval(() => {
       const items = []
 
       // Trending/hot items from search suggestions

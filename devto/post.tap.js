@@ -10,42 +10,42 @@ export default {
     published: { type: "boolean", description: "Publish immediately (default: true)" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.title || !args.body) throw new Error('title and body are required')
 
-    await page.nav('https://dev.to/new')
-    await page.wait(2000)
+    await tap.nav('https://dev.to/new')
+    await tap.wait(2000)
 
     // Fill title
-    await page.type('#article-form-title', args.title)
-    await page.wait(300)
+    await tap.type('#article-form-title', args.title)
+    await tap.wait(300)
 
     // Fill body (markdown textarea)
-    await page.type('#article_body_markdown', args.body)
-    await page.wait(300)
+    await tap.type('#article_body_markdown', args.body)
+    await tap.wait(300)
 
     // Add tags if provided
     if (args.tags) {
       const tags = args.tags.split(',').map(t => t.trim()).filter(Boolean).slice(0, 4)
       for (const tag of tags) {
-        await page.type('#tag-input', tag)
-        await page.wait(300)
-        await page.pressKey('Enter')
-        await page.wait(300)
+        await tap.type('#tag-input', tag)
+        await tap.wait(300)
+        await tap.pressKey('Enter')
+        await tap.wait(300)
       }
     }
 
     // Click Publish
     const published = args.published !== false
     if (published) {
-      await page.click('Publish')
-      await page.wait(5000)
+      await tap.click('Publish')
+      await tap.wait(5000)
     } else {
-      await page.click('Save draft')
-      await page.wait(3000)
+      await tap.click('Save draft')
+      await tap.wait(3000)
     }
 
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     const isNew = url.includes('/new')
 
     return [{

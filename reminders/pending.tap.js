@@ -8,8 +8,8 @@ export default {
   description: "Incomplete reminders",
   columns: ["title", "list", "dueDate", "priority", "notes"],
 
-  async run(page) {
-    const items = await page.eval(`
+  async run(tap) {
+    const items = await tap.eval(`
       var app = Application("Reminders");
       var results = [];
       var lists = app.lists();

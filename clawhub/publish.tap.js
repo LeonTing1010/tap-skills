@@ -11,14 +11,14 @@ export default {
     changelog: { type: "string", description: "Changelog text" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.slug || !args.skillFile) throw new Error('slug and skillFile are required')
 
-    await page.nav('https://clawhub.ai/publish-skill')
-    await page.wait(2000)
+    await tap.nav('https://clawhub.ai/publish-skill')
+    await tap.wait(2000)
 
     // Fill form fields via native setters
-    await page.eval((slug, displayName, version) => {
+    await tap.eval((slug, displayName, version) => {
       function setInput(sel, val) {
         const el = document.querySelector(sel);
         if (!el || !val) return;
@@ -33,28 +33,28 @@ export default {
     }, args.slug, args.displayName, args.version)
 
     // Strip webkitdirectory and upload file
-    await page.eval(() => {
+    await tap.eval(() => {
       const input = document.querySelector('#upload-files');
       if (input) {
         input.removeAttribute('webkitdirectory');
         input.removeAttribute('directory');
       }
     })
-    await page.upload('#upload-files', args.skillFile)
-    await page.wait(500)
+    await tap.upload('#upload-files', args.skillFile)
+    await tap.wait(500)
 
     // Trigger change event for file recognition
-    await page.eval(() => {
+    await tap.eval(() => {
       document.querySelector('#upload-files')?.dispatchEvent(new Event('change', { bubbles: true }));
     })
-    await page.wait(500)
+    await tap.wait(500)
 
     // Check agreement checkbox
-    await page.click('input[type="checkbox"]')
+    await tap.click('input[type="checkbox"]')
 
     // Fill changelog
     if (args.changelog) {
-      await page.eval((text) => {
+      await tap.eval((text) => {
         const ta = document.querySelector('#changelog');
         if (!ta) return;
         const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
@@ -62,13 +62,13 @@ export default {
         ta.dispatchEvent(new Event('input', { bubbles: true }));
       }, args.changelog)
     }
-    await page.wait(500)
+    await tap.wait(500)
 
     // Click Publish
-    await page.click('button.btn.btn-primary')
-    await page.wait(5000)
+    await tap.click('button.btn.btn-primary')
+    await tap.wait(5000)
 
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     const published = url.includes('/leonting1010/') || url.includes('/publish')
 
     return [{ status: published ? 'published' : 'check-browser', url: String(url) }]

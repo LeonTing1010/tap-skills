@@ -18,8 +18,8 @@ export default {
     input: { type: "string", default: "", description: "Input text (optional)" },
   },
 
-  async run(page, args) {
-    // Use page.eval to call shortcuts CLI via JXA doShellScript.
+  async run(tap, args) {
+    // Use tap.eval to call shortcuts CLI via JXA doShellScript.
     // Shell args are single-quoted with internal quotes escaped to prevent injection.
     const esc = (s) => "'" + String(s).replace(/'/g, "'\\''") + "'";
     const name = esc(args.name);
@@ -29,7 +29,7 @@ export default {
       ? `shortcuts run ${name} --input-type text --input ${input}`
       : `shortcuts run ${name}`;
 
-    const result = await page.eval(`
+    const result = await tap.eval(`
       var app = Application.currentApplication();
       app.includeStandardAdditions = true;
       try {

@@ -9,13 +9,13 @@ export default {
     aweme_id: { type: "string", default: "" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (args.aweme_id) {
       const url = `https://www.douyin.com/video/${args.aweme_id}`
-      await page.nav(url)
-      await page.wait(3000)
+      await tap.nav(url)
+      await tap.wait(3000)
 
-      const info = await page.eval(() => {
+      const info = await tap.eval(() => {
         try {
           const el = document.querySelector('#RENDER_DATA')
           if (!el) return null
@@ -44,7 +44,7 @@ export default {
     }
 
     // Use search tap to find videos
-    const results = await page.tap("douyin", "search", { keyword: args.keyword })
+    const results = await tap.run("douyin", "search", { keyword: args.keyword })
     const idx = (args.index || 1) - 1
     if (!results || !results[idx]) {
       return [{ aweme_id: "", title: "", author: "", url: "no search results" }]
@@ -58,8 +58,8 @@ export default {
       return [{ aweme_id: "", title: target.title || "", author: target.author || "", url: "no video url" }]
     }
 
-    await page.nav(target.url)
-    await page.wait(3000)
+    await tap.nav(target.url)
+    await tap.wait(3000)
 
     return [{
       aweme_id: awemeId,

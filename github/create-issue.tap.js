@@ -10,12 +10,12 @@ export default {
     labels: { type: "string", default: "" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.repo || !args.title) {
       return [{ status: "error", url: "missing repo or title" }]
     }
 
-    const result = await page.eval(async (a) => {
+    const result = await tap.eval(async (a) => {
       const labelsArr = a.labels ? a.labels.split(",").map(l => l.trim()).filter(Boolean) : []
       const res = await fetch(`https://api.github.com/repos/${a.repo}/issues`, {
         method: "POST",

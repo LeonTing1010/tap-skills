@@ -9,9 +9,9 @@ export default {
   },
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(page, args) {
+  async run(tap, args) {
     // Compose: open note → read detail
-    await page.tap("xiaohongshu", "open", { keyword: args.keyword, index: args.index })
-    return await page.tap("xiaohongshu", "detail")
+    await tap.run("xiaohongshu", "open", { keyword: args.keyword, index: args.index })
+    return await tap.run("xiaohongshu", "detail")
   }
 }

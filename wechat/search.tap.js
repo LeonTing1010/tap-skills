@@ -9,14 +9,14 @@ export default {
   },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  async run(page, args) {
+  async run(tap, args) {
     const keyword = encodeURIComponent(args.keyword)
-    await page.nav(`https://weixin.sogou.com/weixin?type=2&query=${keyword}`)
-    await page.waitFor(".news-list li, .news-box li, .txt-box", 10000)
-    await page.wait(2000)
+    await tap.nav(`https://weixin.sogou.com/weixin?type=2&query=${keyword}`)
+    await tap.waitFor(".news-list li, .news-box li, .txt-box", 10000)
+    await tap.wait(2000)
 
     const limit = args.limit || 20
-    const results = await page.eval((limit) => {
+    const results = await tap.eval((limit) => {
       const items = []
       const articles = document.querySelectorAll('.news-list li, .news-box li')
       for (let i = 0; i < Math.min(articles.length, limit); i++) {

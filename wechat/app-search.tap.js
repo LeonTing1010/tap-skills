@@ -15,11 +15,11 @@ export default {
     query: { type: "string", required: true, description: "Search query" },
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     const query = args.query;
 
     // Single eval: activate → search → wait → extract → cleanup. Zero focus switching.
-    const rawText = await page.eval(`
+    const rawText = await tap.eval(`
       ObjC.import('CoreGraphics');
       var app = Application.currentApplication();
       app.includeStandardAdditions = true;

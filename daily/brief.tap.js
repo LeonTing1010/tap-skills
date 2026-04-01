@@ -19,12 +19,12 @@ export default {
     save: { type: "string", default: "false", description: "Save to Apple Notes" },
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     const rows = [];
 
     // --- Calendar events (composition: page.tap) ---
     try {
-      const calResult = await page.tap("calendar", "today");
+      const calResult = await tap.run("calendar", "today");
       for (const event of (calResult.rows || [])) {
         rows.push({
           type: "event",
@@ -39,7 +39,7 @@ export default {
 
     // --- Pending reminders (composition: page.tap) ---
     try {
-      const remResult = await page.tap("reminders", "pending");
+      const remResult = await tap.run("reminders", "pending");
       for (const item of (remResult.rows || [])) {
         rows.push({
           type: "todo",
@@ -61,7 +61,7 @@ export default {
         .join("\n");
 
       try {
-        await page.tap("notes", "create", {
+        await tap.run("notes", "create", {
           title: `Daily Brief ${today}`,
           body: body || "No events or reminders today.",
         });

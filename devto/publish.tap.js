@@ -9,32 +9,32 @@ export default {
     tags: { type: "string", description: "Comma-separated tags, up to 4 (optional)" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.title || !args.content) {
       return [{ status: "error", url: "missing title or content" }]
     }
 
-    await page.nav("https://dev.to/new")
-    await page.wait(3000)
+    await tap.nav("https://dev.to/new")
+    await tap.wait(3000)
 
     // Type title
-    await page.click('#article-form-title')
-    await page.wait(300)
-    await page.type('#article-form-title', args.title)
-    await page.wait(500)
+    await tap.click('#article-form-title')
+    await tap.wait(300)
+    await tap.type('#article-form-title', args.title)
+    await tap.wait(500)
 
     // Add tags if provided
     if (args.tags) {
-      await page.click('#tag-input')
-      await page.wait(300)
-      await page.type('#tag-input', args.tags)
-      await page.wait(500)
+      await tap.click('#tag-input')
+      await tap.wait(300)
+      await tap.type('#tag-input', args.tags)
+      await tap.wait(500)
     }
 
     // Set body content via native setter (type() times out on long text)
-    await page.click('#article_body_markdown')
-    await page.wait(300)
-    const bodySet = await page.eval(`(() => {
+    await tap.click('#article_body_markdown')
+    await tap.wait(300)
+    const bodySet = await tap.eval(`(() => {
       const ta = document.getElementById('article_body_markdown');
       if (!ta) return false;
       const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
@@ -46,10 +46,10 @@ export default {
     if (!bodySet) {
       return [{ status: "error", url: "could not set body content" }]
     }
-    await page.wait(1000)
+    await tap.wait(1000)
 
     // Click Publish
-    const published = await page.eval(`(() => {
+    const published = await tap.eval(`(() => {
       const btn = Array.from(document.querySelectorAll('button')).find(b =>
         b.textContent?.trim() === 'Publish' && b.className.includes('c-btn--primary')
       );
@@ -57,8 +57,8 @@ export default {
       return false;
     })()`)
 
-    await page.wait(5000)
-    const url = await page.eval(() => location.href)
+    await tap.wait(5000)
+    const url = await tap.eval(() => location.href)
 
     return [{
       status: !url.includes('/new') ? "published" : "check-browser",

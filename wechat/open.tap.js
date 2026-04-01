@@ -9,24 +9,24 @@ export default {
     url: { type: "string", default: "" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (args.url) {
-      await page.nav(args.url)
+      await tap.nav(args.url)
     } else if (args.keyword) {
-      const results = await page.tap("wechat", "search", { keyword: args.keyword, limit: args.index || 5 })
+      const results = await tap.run("wechat", "search", { keyword: args.keyword, limit: args.index || 5 })
       const target = results[(args.index || 1) - 1]
       if (!target || !target.url) {
         return [{ title: "", author: "", url: "no result at index " + (args.index || 1) }]
       }
-      await page.nav(target.url)
+      await tap.nav(target.url)
     } else {
       return [{ title: "", author: "", url: "provide keyword or url" }]
     }
 
-    await page.waitFor("#js_content, .rich_media_content", 10000)
-    await page.wait(2000)
+    await tap.waitFor("#js_content, .rich_media_content", 10000)
+    await tap.wait(2000)
 
-    const info = await page.eval(() => {
+    const info = await tap.eval(() => {
       const title = (document.querySelector('#activity-name')?.innerText || '').trim()
       const author = (document.querySelector('#js_name, .rich_media_meta_nickname')?.innerText || '').trim()
       return {

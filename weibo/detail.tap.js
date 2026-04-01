@@ -6,9 +6,9 @@ export default {
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(page) {
+  async run(tap) {
     // Extract mid from current URL
-    const mid = await page.eval(() => {
+    const mid = await tap.eval(() => {
       const url = location.href
       // m.weibo.cn/detail/{mid} or weibo.com/{uid}/{mid}
       const mMatch = url.match(/m\.weibo\.cn\/detail\/(\w+)/)
@@ -22,7 +22,7 @@ export default {
       return [{ type: "error", content: "not on a weibo post page — call open first", likes: "0", author: "" }]
     }
 
-    const items = await page.eval(async (mid) => {
+    const items = await tap.eval(async (mid) => {
       const results = []
 
       // Fetch post detail via API

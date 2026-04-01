@@ -8,9 +8,9 @@ export default {
     index: { type: "int", default: 1 }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     // Compose: use search tap to get results
-    const results = await page.tap("zhihu", "search", { keyword: args.keyword })
+    const results = await tap.run("zhihu", "search", { keyword: args.keyword })
     const idx = (args.index || 1) - 1
     if (!results || !results[idx]) {
       return [{ qid: "", title: "no result at index " + (idx + 1), author: "", url: "" }]
@@ -27,8 +27,8 @@ export default {
     const qid = qidMatch ? qidMatch[1] : ""
 
     // Navigate to the question page
-    await page.nav(url)
-    await page.wait(2000)
+    await tap.nav(url)
+    await tap.wait(2000)
 
     return [{
       qid: qid,

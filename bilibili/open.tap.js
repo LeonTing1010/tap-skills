@@ -9,11 +9,11 @@ export default {
     index: { type: "int", default: 1 }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     let bvid = args.bvid
 
     if (!bvid && args.keyword) {
-      const results = await page.tap("bilibili", "search", { keyword: args.keyword })
+      const results = await tap.run("bilibili", "search", { keyword: args.keyword })
       const idx = Math.max(0, (args.index || 1) - 1)
       if (!results || !results[idx]) {
         return [{ bvid: "", title: "", author: "", url: "no search results" }]
@@ -25,11 +25,11 @@ export default {
       return [{ bvid: "", title: "", author: "", url: "missing bvid or keyword arg" }]
     }
 
-    await page.nav(`https://www.bilibili.com/video/${bvid}`)
-    await page.waitFor(".video-info-title, .video-title, h1", 10000)
-    await page.wait(2000)
+    await tap.nav(`https://www.bilibili.com/video/${bvid}`)
+    await tap.waitFor(".video-info-title, .video-title, h1", 10000)
+    await tap.wait(2000)
 
-    const info = await page.eval(() => {
+    const info = await tap.eval(() => {
       const bvMatch = location.pathname.match(/BV\w+/)
       const bv = bvMatch ? bvMatch[0] : ''
       const title = document.querySelector('.video-info-title .video-title, .video-title, h1')?.textContent?.trim() || ''

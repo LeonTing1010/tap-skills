@@ -17,12 +17,12 @@ export default {
     count: { type: "string", default: "3", description: "Number of articles to read" },
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     const maxArticles = parseInt(args.count) || 3;
 
     // Helper: get window state
     async function getWindows() {
-      return await page.eval(`
+      return await tap.eval(`
         var se = Application("System Events");
         var proc = se.processes["WeChat"];
         var wins = proc.windows();
@@ -37,7 +37,7 @@ export default {
 
     // Helper: read clipboard
     async function readClipboard() {
-      return await page.eval(`
+      return await tap.eval(`
         var app = Application.currentApplication();
         app.includeStandardAdditions = true;
         String(app.theClipboard());
@@ -46,7 +46,7 @@ export default {
 
     // Helper: click menu
     async function clickMenu(menu, item) {
-      await page.eval(`
+      await tap.eval(`
         var se = Application("System Events");
         var proc = se.processes["WeChat"];
         proc.frontmost = true;
@@ -55,10 +55,10 @@ export default {
     }
 
     // Step 1: Navigate to Official Accounts (Chats view)
-    await page.eval(`Application("WeChat").activate();`);
-    await page.wait(500);
+    await tap.eval(`Application("WeChat").activate();`);
+    await tap.wait(500);
     await clickMenu("Window", "Chats");
-    await page.wait(800);
+    await tap.wait(800);
 
     // Get main window position
     const wins = await getWindows();
@@ -74,8 +74,8 @@ export default {
       const beforeWins = await getWindows();
 
       // Click article
-      await page.pointer(artX, artY, "click");
-      await page.wait(2000);
+      await tap.pointer(artX, artY, "click");
+      await tap.wait(2000);
 
       // Check if new window opened (AX feedback)
       const afterWins = await getWindows();
@@ -88,18 +88,18 @@ export default {
       const artWin = afterWins.find(w => w.title !== "Weixin");
       if (artWin) {
         // Click in the article content area
-        await page.pointer(
+        await tap.pointer(
           Math.round(artWin.x + artWin.w * 0.4),
           Math.round(artWin.y + artWin.h * 0.5),
           "click",
         );
-        await page.wait(200);
+        await tap.wait(200);
 
         // Select All + Copy via menu
         try { await clickMenu("Edit", "Select All"); } catch {}
-        await page.wait(200);
+        await tap.wait(200);
         try { await clickMenu("Edit", "Copy"); } catch {}
-        await page.wait(300);
+        await tap.wait(300);
 
         // Read clipboard
         const content = await readClipboard();
@@ -120,8 +120,8 @@ export default {
         }
 
         // Close article window: Cmd+W
-        await page.keyboard("Meta+W", "press");
-        await page.wait(500);
+        await tap.keyboard("Meta+W", "press");
+        await tap.wait(500);
       }
     }
 

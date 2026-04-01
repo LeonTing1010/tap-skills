@@ -7,20 +7,20 @@ export default {
     message: { type: "string" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.message) {
       return [{ status: "error", message: "missing message arg" }]
     }
 
     // Type into the message composer
-    await page.click('[data-qa="message_input"], .ql-editor, [contenteditable="true"]')
-    await page.wait(300)
-    await page.type('[data-qa="message_input"], .ql-editor, [contenteditable="true"]', args.message)
-    await page.wait(300)
+    await tap.click('[data-qa="message_input"], .ql-editor, [contenteditable="true"]')
+    await tap.wait(300)
+    await tap.type('[data-qa="message_input"], .ql-editor, [contenteditable="true"]', args.message)
+    await tap.wait(300)
 
     // Send with Enter
-    await page.pressKey("Enter")
-    await page.wait(1000)
+    await tap.pressKey("Enter")
+    await tap.wait(1000)
 
     return [{ status: "sent", message: args.message }]
   }

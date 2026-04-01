@@ -9,16 +9,16 @@ export default {
     content: { type: "string", default: "" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     // Write title via Quill API
-    await page.eval((title) => {
+    await tap.eval((title) => {
       quill.setText('\n')
       quill.insertText(0, title, { header: 1 })
     }, args.title)
 
     // Write author if provided
     if (args.author) {
-      await page.eval((author) => {
+      await tap.eval((author) => {
         const addr = document.querySelector('.ql-editor address')
         const a = addr.querySelector('a') || document.createElement('a')
         a.textContent = author
@@ -29,24 +29,24 @@ export default {
 
     // Write body content
     if (args.content) {
-      await page.eval((content) => {
+      await tap.eval((content) => {
         quill.insertText(quill.getLength() - 1, content)
       }, args.content)
     }
 
-    await page.wait(500)
+    await tap.wait(500)
 
     // Force publish button visible, then click
-    await page.eval(() => {
+    await tap.eval(() => {
       document.querySelector('#_publish_button').style.cssText =
         'visibility: visible !important; display: inline-block !important;'
     })
-    await page.wait(300)
-    await page.click("#_publish_button")
-    await page.wait(3000)
+    await tap.wait(300)
+    await tap.click("#_publish_button")
+    await tap.wait(3000)
 
     // Check result
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     const published = url !== 'https://telegra.ph/' && url.includes('telegra.ph/')
 
     return [{

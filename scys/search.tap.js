@@ -8,24 +8,24 @@ export default {
   },
   health: { min_rows: 1, non_empty: ["title"] },
 
-  async run(page, args) {
+  async run(tap, args) {
     const keyword = String(args.keyword || "")
     if (!keyword) return [{ title: "ERROR: keyword required", author: "", url: "", badge: "", date: "", preview: "" }]
 
     // 1. 打开首页
-    await page.nav("https://scys.com")
-    await page.waitFor(2000)
+    await tap.nav("https://scys.com")
+    await tap.waitFor(2000)
 
-    // 2. 输入关键词（P0 fix: page.type 现在正确触发 Vue/React 响应式）
-    await page.type('input[type="text"]', keyword)
-    await page.waitFor(500)
+    // 2. 输入关键词（P0 fix: tap.type 现在正确触发 Vue/React 响应式）
+    await tap.type('input[type="text"]', keyword)
+    await tap.waitFor(500)
 
     // 3. 点击搜索图标
-    await page.click('svg.search-icon')
-    await page.waitFor(4000)
+    await tap.click('svg.search-icon')
+    await tap.waitFor(4000)
 
     // 4. 从 Pinia store 提取搜索结果
-    return await page.eval(() => {
+    return await tap.eval(() => {
       var allEls = document.querySelectorAll('*')
       var vueApp = null
       for (var i = 0; i < allEls.length; i++) {

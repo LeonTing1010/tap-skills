@@ -6,9 +6,9 @@ export default {
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(page) {
+  async run(tap) {
     // Get aweme_id from current URL
-    const awemeId = await page.eval(() => {
+    const awemeId = await tap.eval(() => {
       const m = location.pathname.match(/video\/(\d+)/)
       return m ? m[1] : null
     })
@@ -26,7 +26,7 @@ export default {
         device_platform: 'webapp',
         aid: '6383'
       })
-      const detailData = await page.fetch(
+      const detailData = await tap.fetch(
         'https://www.douyin.com/aweme/v1/web/aweme/detail/?' + detailParams.toString()
       )
       const detail = detailData?.aweme_detail
@@ -58,7 +58,7 @@ export default {
         device_platform: 'webapp',
         aid: '6383'
       })
-      const commentData = await page.fetch(
+      const commentData = await tap.fetch(
         'https://www.douyin.com/aweme/v1/web/comment/list/?' + commentParams.toString()
       )
       const comments = commentData?.comments || []

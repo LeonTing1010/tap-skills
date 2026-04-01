@@ -10,23 +10,23 @@ export default {
     topics: { type: "string", description: "Comma-separated topic names (optional)" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.title || !args.content) {
       return [{ status: "error", url: "缺少 title 或 content 参数" }]
     }
 
     // Try API-first approach
-    await page.nav("https://zhuanlan.zhihu.com/write")
-    await page.wait(3000)
+    await tap.nav("https://zhuanlan.zhihu.com/write")
+    await tap.wait(3000)
 
     // Check if redirected to login
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     if (url.includes('signin') || url.includes('login')) {
       return [{ status: "need-login", url }]
     }
 
     // API approach: create draft then publish
-    const apiResult = await page.eval(`(async () => {
+    const apiResult = await tap.eval(`(async () => {
       try {
         // Step 1: Create draft
         const draftRes = await fetch('https://zhuanlan.zhihu.com/api/articles/drafts', {
@@ -84,20 +84,20 @@ export default {
     }
 
     // Fallback: DOM-based approach
-    await page.click('textarea[placeholder*="标题"], .WriteIndex-titleInput textarea')
-    await page.wait(300)
-    await page.type('textarea[placeholder*="标题"], .WriteIndex-titleInput textarea', args.title)
-    await page.wait(500)
+    await tap.click('textarea[placeholder*="标题"], .WriteIndex-titleInput textarea')
+    await tap.wait(300)
+    await tap.type('textarea[placeholder*="标题"], .WriteIndex-titleInput textarea', args.title)
+    await tap.wait(500)
 
-    await page.click('[contenteditable="true"]')
-    await page.wait(300)
-    await page.type('[contenteditable="true"]', args.content)
-    await page.wait(1000)
+    await tap.click('[contenteditable="true"]')
+    await tap.wait(300)
+    await tap.type('[contenteditable="true"]', args.content)
+    await tap.wait(1000)
 
-    await page.click('发布')
-    await page.wait(5000)
+    await tap.click('发布')
+    await tap.wait(5000)
 
-    const finalUrl = await page.eval(() => location.href)
+    const finalUrl = await tap.eval(() => location.href)
     return [{
       status: finalUrl.includes('/p/') ? "published" : "check-browser",
       url: finalUrl

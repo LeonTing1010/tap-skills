@@ -9,7 +9,7 @@ export default {
     text: { type: "string", description: "Text body for Ask HN / Show HN (optional if link provided)" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.title) {
       return [{ status: "error", url: "missing title" }]
     }
@@ -17,36 +17,36 @@ export default {
       return [{ status: "error", url: "need either link or text" }]
     }
 
-    await page.nav("https://news.ycombinator.com/submit")
-    await page.wait(2000)
+    await tap.nav("https://news.ycombinator.com/submit")
+    await tap.wait(2000)
 
     // Fill title
-    await page.click('input[name="title"]')
-    await page.wait(300)
-    await page.type('input[name="title"]', args.title)
-    await page.wait(300)
+    await tap.click('input[name="title"]')
+    await tap.wait(300)
+    await tap.type('input[name="title"]', args.title)
+    await tap.wait(300)
 
     // Fill URL if provided
     if (args.link) {
-      await page.click('input[name="url"]')
-      await page.wait(300)
-      await page.type('input[name="url"]', args.link)
-      await page.wait(300)
+      await tap.click('input[name="url"]')
+      await tap.wait(300)
+      await tap.type('input[name="url"]', args.link)
+      await tap.wait(300)
     }
 
     // Fill text if provided
     if (args.text) {
-      await page.click('textarea[name="text"]')
-      await page.wait(300)
-      await page.type('textarea[name="text"]', args.text)
-      await page.wait(300)
+      await tap.click('textarea[name="text"]')
+      await tap.wait(300)
+      await tap.type('textarea[name="text"]', args.text)
+      await tap.wait(300)
     }
 
     // Submit
-    await page.click('input[type="submit"]')
-    await page.wait(3000)
+    await tap.click('input[type="submit"]')
+    await tap.wait(3000)
 
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     const submitted = !url.includes('/submit')
 
     return [{

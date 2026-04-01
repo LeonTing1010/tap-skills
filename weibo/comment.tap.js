@@ -7,22 +7,22 @@ export default {
     comment: { type: "string" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.comment) {
       return [{ status: "error", comment: "missing comment arg" }]
     }
 
     // Click comment input area to activate
-    await page.click("textarea")
-    await page.wait(500)
+    await tap.click("textarea")
+    await tap.wait(500)
 
     // Type comment
-    await page.type("textarea", args.comment)
-    await page.wait(500)
+    await tap.type("textarea", args.comment)
+    await tap.wait(500)
 
     // Submit comment
-    await page.click("button.m-send-btn")
-    await page.wait(2000)
+    await tap.click("button.m-send-btn")
+    await tap.wait(2000)
 
     return [{ status: "sent", comment: args.comment }]
   }

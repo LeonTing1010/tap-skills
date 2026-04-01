@@ -5,9 +5,9 @@ export default {
   columns: ["status"],
   args: {},
 
-  async run(page) {
+  async run(tap) {
     // Check if already liked via SSR state
-    const already = await page.eval(() => {
+    const already = await tap.eval(() => {
       const map = window.__INITIAL_STATE__?.note?.noteDetailMap || {}
       for (const [k, v] of Object.entries(map)) {
         if (!k || k === "undefined") continue
@@ -21,11 +21,11 @@ export default {
     }
 
     // Click the like button (heart icon in note detail)
-    await page.click('[name="like-active"], .like-wrapper .like-icon, span.like-wrapper')
-    await page.wait(1500)
+    await tap.click('[name="like-active"], .like-wrapper .like-icon, span.like-wrapper')
+    await tap.wait(1500)
 
     // Verify liked state
-    const liked = await page.eval(() => {
+    const liked = await tap.eval(() => {
       const map = window.__INITIAL_STATE__?.note?.noteDetailMap || {}
       for (const [k, v] of Object.entries(map)) {
         if (!k || k === "undefined") continue

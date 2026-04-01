@@ -10,7 +10,7 @@ export default {
     link: { type: "string", optional: true }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.title || !args.subreddit) {
       return [{ status: "error", url: "missing title or subreddit" }]
     }
@@ -20,10 +20,10 @@ export default {
 
     // Navigate to old.reddit.com first (get modhash + cookie context)
     const qs = args.link ? "" : "?selftext=true"
-    await page.nav(`https://old.reddit.com/r/${sub}/submit${qs}`)
+    await tap.nav(`https://old.reddit.com/r/${sub}/submit${qs}`)
 
     // === Strategy 1: API from old.reddit.com page context ===
-    const apiResult = await page.eval(`
+    const apiResult = await tap.eval(`
       (async () => {
         const modhash = document.querySelector('input[name="uh"]')?.value || '';
         if (!modhash) return JSON.stringify({ error: 'not logged in' });
@@ -60,23 +60,23 @@ export default {
     } catch (_) {}
 
     // === Strategy 2: old.reddit.com form (already on page) ===
-    await page.fill('[name="title"]', args.title)
+    await tap.fill('[name="title"]', args.title)
 
     if (args.link) {
-      await page.fill('[name="url"]', args.link)
+      await tap.fill('[name="url"]', args.link)
     } else if (args.content) {
-      await page.eval(() => {
+      await tap.eval(() => {
         const tab = document.querySelector('.text-button')
         if (tab) tab.click()
       })
-      await page.wait(500)
-      await page.fill('[name="text"]', args.content)
+      await tap.wait(500)
+      await tap.fill('[name="text"]', args.content)
     }
 
-    await page.click('[name="submit"]')
-    await page.wait(5000)
+    await tap.click('[name="submit"]')
+    await tap.wait(5000)
 
-    const url = await page.eval(() => location.href)
+    const url = await tap.eval(() => location.href)
     const posted = url.includes("/comments/")
 
     return [{

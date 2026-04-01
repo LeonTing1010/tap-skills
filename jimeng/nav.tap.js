@@ -5,11 +5,11 @@ export default {
   columns: ["status", "url"],
   args: {},
 
-  async run(page) {
-    await page.nav("https://jimeng.jianying.com/ai-tool/image/generate")
-    await page.waitFor('[role="textbox"], .tiptap', 20000)
-    await page.wait(1000)
-    const url = await page.eval(() => location.href)
+  async run(tap) {
+    await tap.nav("https://jimeng.jianying.com/ai-tool/image/generate")
+    await tap.waitFor('[role="textbox"], .tiptap', 20000)
+    await tap.wait(1000)
+    const url = await tap.eval(() => location.href)
     return [{ status: "ready", url }]
   }
 }

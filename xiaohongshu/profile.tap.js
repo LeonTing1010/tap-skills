@@ -5,11 +5,11 @@ export default {
   columns: ["followers", "following", "likes_collects", "views", "likes", "comments", "collects", "shares"],
   health: { min_rows: 1, non_empty: ["followers"] },
 
-  async run(page) {
-    await page.nav("https://creator.xiaohongshu.com/new/home")
-    await page.wait(4000)
+  async run(tap) {
+    await tap.nav("https://creator.xiaohongshu.com/new/home")
+    await tap.wait(4000)
 
-    return await page.eval(() => {
+    return await tap.eval(() => {
       const text = document.body?.innerText || ""
 
       // Parse "label\nvalue" pairs from page text

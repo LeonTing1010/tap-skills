@@ -5,9 +5,9 @@ export default {
   columns: ["status", "user"],
   args: {},
 
-  async run(page) {
+  async run(tap) {
     // Extract author name and follow state from SSR state
-    const info = await page.eval(() => {
+    const info = await tap.eval(() => {
       const map = window.__INITIAL_STATE__?.note?.noteDetailMap || {}
       for (const [k, v] of Object.entries(map)) {
         if (!k || k === "undefined" || k === "") continue
@@ -30,11 +30,11 @@ export default {
     }
 
     // Click the follow button in the note detail
-    await page.click("关注")
-    await page.wait(2000)
+    await tap.click("关注")
+    await tap.wait(2000)
 
     // Verify follow state changed
-    const after = await page.eval(() => {
+    const after = await tap.eval(() => {
       const map = window.__INITIAL_STATE__?.note?.noteDetailMap || {}
       for (const [k, v] of Object.entries(map)) {
         if (!k || k === "undefined" || k === "") continue

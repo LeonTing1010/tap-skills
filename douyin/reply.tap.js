@@ -8,13 +8,13 @@ export default {
     comment: { type: "string" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.comment) {
       return [{ status: "error", comment: "missing comment arg" }]
     }
 
     // Click reply on the Nth comment
-    const found = await page.eval((a) => {
+    const found = await tap.eval((a) => {
       const items = document.querySelectorAll('[class*="commentItem"], [class*="comment-item"]')
       const idx = (a.index || 1) - 1
       const item = items[idx]
@@ -28,11 +28,11 @@ export default {
       return [{ status: "error", comment: "comment not found at index " + args.index }]
     }
 
-    await page.wait(1000)
-    await page.type("textarea", args.comment)
-    await page.wait(500)
-    await page.click("发布")
-    await page.wait(2000)
+    await tap.wait(1000)
+    await tap.type("textarea", args.comment)
+    await tap.wait(500)
+    await tap.click("发布")
+    await tap.wait(2000)
 
     return [{ status: "replied", comment: args.comment }]
   }

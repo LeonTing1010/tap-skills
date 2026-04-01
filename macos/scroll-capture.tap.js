@@ -20,18 +20,18 @@ export default {
     app: { type: "string", default: "", description: "App to activate (empty = frontmost)" },
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     const maxScreens = Math.min(Math.max(args.screens || 1, 1), 3);
     const header = args.header || 0;
 
     // Activate app if specified
     if (args.app) {
-      await page.eval(`Application(${JSON.stringify(args.app)}).activate();`);
-      await page.wait(500);
+      await tap.eval(`Application(${JSON.stringify(args.app)}).activate();`);
+      await tap.wait(500);
     }
 
     // Get frontmost window geometry
-    const win = await page.eval(`
+    const win = await tap.eval(`
       var se = Application("System Events");
       var front = se.applicationProcesses.whose({frontmost: true})[0];
       var w = front.windows[0];
@@ -50,16 +50,16 @@ export default {
     for (let i = 0; i < maxScreens; i++) {
       if (i > 0) {
         // Pixel-precise scroll: unit=1 (kCGScrollEventUnitPixel)
-        await page.eval(`
+        await tap.eval(`
           ObjC.import('CoreGraphics');
           var e = $.CGEventCreateScrollWheelEvent(null, 1, 1, ${-scrollPx});
           $.CGEventSetLocation(e, $.CGPointMake(${scrollX}, ${scrollY}));
           $.CGEventPost($.kCGHIDEventTap, e);
         `);
-        await page.wait(1500);
+        await tap.wait(1500);
       }
 
-      const shot = await page.screenshot();
+      const shot = await tap.screenshot();
       const file = `/tmp/scroll-capture-${i + 1}.png`;
       results.push({ screen: String(i + 1), file });
     }

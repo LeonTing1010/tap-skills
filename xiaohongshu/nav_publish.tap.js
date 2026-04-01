@@ -5,10 +5,10 @@ export default {
   columns: ["status", "url"],
   args: {},
 
-  async run(page) {
-    await page.nav("https://creator.xiaohongshu.com/publish/publish")
-    await page.waitFor(".creator-tab", 10000)
-    const url = await page.eval(() => location.href)
+  async run(tap) {
+    await tap.nav("https://creator.xiaohongshu.com/publish/publish")
+    await tap.waitFor(".creator-tab", 10000)
+    const url = await tap.eval(() => location.href)
     return [{ status: "ready", url }]
   }
 }

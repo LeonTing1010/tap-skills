@@ -11,13 +11,13 @@ export default {
     brief: { type: "string", description: "摘要 (optional, max 100 chars)" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.title || !args.content) {
       return [{ status: "error", url: "缺少 title 或 content 参数" }]
     }
 
-    await page.nav("https://juejin.cn")
-    await page.wait(2000)
+    await tap.nav("https://juejin.cn")
+    await tap.wait(2000)
 
     // Category ID mapping
     const categoryMap = {
@@ -37,7 +37,7 @@ export default {
     if (args.tags) {
       const keywords = args.tags.split(',').map(t => t.trim())
       for (const kw of keywords) {
-        const tagResult = await page.eval(`
+        const tagResult = await tap.eval(`
           fetch('https://api.juejin.cn/tag_api/v1/query_tag_list', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
@@ -49,7 +49,7 @@ export default {
     }
     // Juejin requires at least one tag
     if (tagIds.length === 0) {
-      const defaultTag = await page.eval(`
+      const defaultTag = await tap.eval(`
         fetch('https://api.juejin.cn/tag_api/v1/query_tag_list', {
           method: 'POST', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -60,7 +60,7 @@ export default {
     }
 
     // Step 1: Create draft
-    const draftResult = await page.eval(`
+    const draftResult = await tap.eval(`
       fetch('https://api.juejin.cn/content_api/v1/article_draft/create', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -84,7 +84,7 @@ export default {
     }
 
     // Step 2: Update draft with tags (in case create didn't persist them)
-    await page.eval(`
+    await tap.eval(`
       fetch('https://api.juejin.cn/content_api/v1/article_draft/update', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -104,7 +104,7 @@ export default {
     `)
 
     // Step 3: Publish
-    const pubResult = await page.eval(`
+    const pubResult = await tap.eval(`
       fetch('https://api.juejin.cn/content_api/v1/article/publish', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

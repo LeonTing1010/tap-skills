@@ -7,11 +7,11 @@ export default {
     hot_index: { type: "int", default: 1, description: "选择微博热搜第 N 个话题" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     const hotIndex = args.hot_index || 1
     
     // Step 1: 获取微博热搜
-    const hotData = await page.tap("weibo", "hot")
+    const hotData = await tap.run("weibo", "hot")
     if (!hotData || hotData.length === 0) {
       return [{ status: "error-weibo", topic: "", note_url: "" }]
     }
@@ -21,22 +21,22 @@ export default {
     const noteContent = generateContent(topicTitle)
     
     // Step 2: 导航到小红书发布页面
-    await page.nav("https://creator.xiaohongshu.com/publish/publish?source=official")
-    await page.wait(4000)
+    await tap.nav("https://creator.xiaohongshu.com/publish/publish?source=official")
+    await tap.wait(4000)
     
     // Step 3: 发布笔记（纯文字，跳过图片上传）
     // 直接在当前页面填写标题和内容
     if (noteContent.title) {
-      await page.type("input.d-text", noteContent.title)
-      await page.wait(500)
+      await tap.type("input.d-text", noteContent.title)
+      await tap.wait(500)
     }
     if (noteContent.content) {
-      await page.type(".tiptap.ProseMirror", noteContent.content)
-      await page.wait(500)
+      await tap.type(".tiptap.ProseMirror", noteContent.content)
+      await tap.wait(500)
     }
-    await page.click("发布")
-    await page.wait(5000)
-    const url = await page.eval("location.href")
+    await tap.click("发布")
+    await tap.wait(5000)
+    const url = await tap.eval("location.href")
     const result = [{ status: url.includes("/publish/publish") ? "check-browser" : "published", url }]
     
     return [{

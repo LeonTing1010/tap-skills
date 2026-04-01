@@ -8,7 +8,7 @@ export default {
     content: { type: "string" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     if (!args.post_url || !args.content) {
       return [{ status: "error", url: "missing post_url or content" }]
     }
@@ -23,10 +23,10 @@ export default {
 
     // Navigate to old.reddit.com to get modhash + cookie context
     const oldUrl = args.post_url.replace("www.reddit.com", "old.reddit.com")
-    await page.nav(oldUrl)
+    await tap.nav(oldUrl)
 
     // Post via API from old.reddit.com page context (proven approach)
-    const result = await page.eval(`
+    const result = await tap.eval(`
       (async () => {
         const modhash = document.querySelector('input[name="uh"]')?.value || '';
         if (!modhash) return JSON.stringify({ error: 'not logged in' });
@@ -58,10 +58,10 @@ export default {
 
     // Fallback: fill form directly on old.reddit.com
     try {
-      await page.fill('[name="text"]', args.content)
-      await page.click('.save[type="submit"]')
-      await page.wait(5000)
-      const url = await page.eval(() => location.href)
+      await tap.fill('[name="text"]', args.content)
+      await tap.click('.save[type="submit"]')
+      await tap.wait(5000)
+      const url = await tap.eval(() => location.href)
       return [{ status: "commented", url }]
     } catch (_) {}
 

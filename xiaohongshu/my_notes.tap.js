@@ -6,15 +6,15 @@ export default {
   args: { limit: { type: "int", default: 20 } },
   health: { min_rows: 1, non_empty: ["title"] },
 
-  async run(page, args) {
+  async run(tap, args) {
     // Navigate to note manager via creator home → click
-    await page.nav("https://creator.xiaohongshu.com/new/home")
-    await page.wait(4000)
-    await page.click("笔记管理")
-    await page.wait(4000)
+    await tap.nav("https://creator.xiaohongshu.com/new/home")
+    await tap.wait(4000)
+    await tap.click("笔记管理")
+    await tap.wait(4000)
 
     // Extract note list from DOM
-    const notes = await page.eval(() => {
+    const notes = await tap.eval(() => {
       const text = document.body?.innerText || ""
       const lines = text.split("\n").map(l => l.trim()).filter(Boolean)
       const results = []

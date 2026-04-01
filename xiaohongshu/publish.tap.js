@@ -9,28 +9,28 @@ export default {
     images: { type: "string" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     // XHS title limit: 20 chars
     const title = args.title.substring(0, 20)
 
     // Navigate to publish page and wait for it to be ready
-    await page.nav('https://creator.xiaohongshu.com/publish/publish')
-    await page.waitFor('.creator-tab', 10000)
+    await tap.nav('https://creator.xiaohongshu.com/publish/publish')
+    await tap.waitFor('.creator-tab', 10000)
 
-    // JS click "上传图文" — CDP pointer (page.click) causes detach on this page
-    await page.eval(() => {
+    // JS click "上传图文" — CDP pointer (tap.click) causes detach on this page
+    await tap.eval(() => {
       const el = Array.from(document.querySelectorAll('*'))
         .find(e => e.children.length === 0 && e.innerText?.trim() === '上传图文')
       el?.click()
     })
 
     // Poll for upload input readiness — fixed wait(2000) is unreliable
-    await page.waitFor('input.upload-input', 5000)
+    await tap.waitFor('input.upload-input', 5000)
 
-    await page.upload('input.upload-input', args.images)
+    await tap.upload('input.upload-input', args.images)
 
     // Poll for image preview — confirms upload completed
-    const uploaded = await page.eval(() => {
+    const uploaded = await tap.eval(() => {
       return new Promise((resolve) => {
         let n = 0
         const check = () => {
@@ -46,18 +46,18 @@ export default {
 
     // Fill content FIRST — editor.focus() steals focus; title must be set after
     if (args.content) {
-      await page.eval((text) => {
+      await tap.eval((text) => {
         const editor = document.querySelector('.tiptap.ProseMirror')
         editor?.focus()
         document.execCommand('selectAll')
         document.execCommand('insertText', false, text)
       }, args.content)
-      await page.wait(300)
+      await tap.wait(300)
     }
 
-    // Fill title LAST — React native setter; CDP page.type causes detach
+    // Fill title LAST — React native setter; CDP tap.type causes detach
     if (title) {
-      await page.eval((t) => {
+      await tap.eval((t) => {
         const input = document.querySelector('input.d-text')
         input?.focus()
         const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set
@@ -65,11 +65,11 @@ export default {
         input.dispatchEvent(new Event('input', { bubbles: true }))
         input.dispatchEvent(new Event('change', { bubbles: true }))
       }, title)
-      await page.wait(500)
+      await tap.wait(500)
     }
 
     // Monitor toasts before clicking publish to surface validation errors immediately
-    await page.eval(() => {
+    await tap.eval(() => {
       window.__tapToast = []
       window.__tapToastObserver = new MutationObserver(ms => {
         for (const m of ms) for (const n of m.addedNodes)
@@ -80,15 +80,15 @@ export default {
     })
 
     // JS click "发布" — CDP pointer causes detach on this page
-    await page.eval(() => {
+    await tap.eval(() => {
       const btn = Array.from(document.querySelectorAll('button'))
         .find(e => e.innerText?.trim() === '发布')
       btn?.click()
     })
 
-    await page.wait(5000)
+    await tap.wait(5000)
 
-    const result = await page.eval(() => {
+    const result = await tap.eval(() => {
       window.__tapToastObserver?.disconnect()
       const url = location.href
       const toastErr = (window.__tapToast || [])

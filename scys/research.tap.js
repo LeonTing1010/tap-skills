@@ -9,13 +9,13 @@ export default {
   },
   health: { min_rows: 1, non_empty: ["title"] },
 
-  async run(page, args) {
+  async run(tap, args) {
     const keyword = String(args.keyword || "")
     if (!keyword) return [{ title: "ERROR: keyword required", feishu: "", url: "", badge: "", date: "", preview: "" }]
     const limit = parseInt(args.limit || "5", 10)
 
     // Step 1: 调用 search tap 获取搜索结果
-    const searchRows = await page.tap("scys", "search", { keyword })
+    const searchRows = await tap.run("scys", "search", { keyword })
 
     // 过滤掉 summary 行
     const articles = searchRows.filter(r => r.badge !== "summary")
@@ -28,7 +28,7 @@ export default {
     const topN = articles.slice(0, limit)
 
     for (const article of topN) {
-      const articleRows = await page.tap("scys", "article", { url: article.url })
+      const articleRows = await tap.run("scys", "article", { url: article.url })
       const feishuRow = articleRows.find(r => r.type === "feishu_link")
 
       results.push({

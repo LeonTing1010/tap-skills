@@ -6,8 +6,8 @@ export default {
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(page) {
-    const info = await page.eval(() => {
+  async run(tap) {
+    const info = await tap.eval(() => {
       const bvMatch = location.pathname.match(/BV\w+/)
       return { bvid: bvMatch ? bvMatch[0] : '' }
     })
@@ -17,7 +17,7 @@ export default {
     }
 
     // Fetch video detail via API
-    const viewData = await page.fetch(
+    const viewData = await tap.fetch(
       `https://api.bilibili.com/x/web-interface/view?bvid=${info.bvid}`
     )
 
@@ -42,7 +42,7 @@ export default {
     // Fetch comments via API using aid from view response
     const aid = video.aid || stat.aid || 0
     if (aid) {
-      const commentData = await page.fetch(
+      const commentData = await tap.fetch(
         `https://api.bilibili.com/x/v2/reply/main?type=1&oid=${aid}&mode=3`
       )
       const replies = commentData?.data?.replies || []

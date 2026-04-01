@@ -9,13 +9,13 @@ export default {
     prompt_filter: { type: "string", default: "", description: "按 prompt 关键词筛选，空字符串取最新" }
   },
 
-  async run(page, args) {
+  async run(tap, args) {
     // Ensure we're on jimeng domain for the API call
-    await page.nav("https://jimeng.jianying.com/ai-tool/generate/?type=image&workspace=0")
-    await page.wait(1000)
+    await tap.nav("https://jimeng.jianying.com/ai-tool/generate/?type=image&workspace=0")
+    await tap.wait(1000)
 
     // Call history API directly — no page navigation needed
-    const images = await page.eval((count, promptFilter) => {
+    const images = await tap.eval((count, promptFilter) => {
       return fetch('/mweb/v1/get_history?aid=513695&device_platform=web&region=cn', {
         method: 'POST',
         credentials: 'include',
@@ -51,7 +51,7 @@ export default {
     }
 
     // Download via browser fetch (uses session cookies for auth)
-    const results = await page.eval((images) => {
+    const results = await tap.eval((images) => {
       return Promise.all(images.map((img, i) => {
         return fetch(img.url)
           .then(r => r.blob())

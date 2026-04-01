@@ -10,8 +10,8 @@ export default {
   description: "List available Apple Shortcuts",
   columns: ["name"],
 
-  async run(page) {
-    const result = await page.eval(`
+  async run(tap) {
+    const result = await tap.eval(`
       var app = Application.currentApplication();
       app.includeStandardAdditions = true;
       var out = app.doShellScript("shortcuts list");
