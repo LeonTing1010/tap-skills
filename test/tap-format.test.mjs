@@ -226,6 +226,15 @@ for (const { site, name, path } of tapFiles) {
     }
   })
 
+  test(id, `[sandbox] no arrow functions in tap.eval() — use string expressions`, () => {
+    // WHY: tap.eval(() => ...) passes a function through Worker postMessage.
+    // Functions can't be structured-cloned across Worker boundary → DataCloneError.
+    // Fix: tap.eval("location.href") instead of tap.eval(() => location.href)
+    const arrowInEval = /\.eval\s*\(\s*\(/.test(src)
+    assert(!arrowInEval,
+      'tap.eval(() => ...) breaks Worker sandbox — use tap.eval("expression") string instead')
+  })
+
   // ===== EXTRACT-FORMAT CONSTRAINTS =====
 
   if (hasExtract) {
