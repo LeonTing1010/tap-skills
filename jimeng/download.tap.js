@@ -56,14 +56,15 @@ export default {
         return fetch(img.url)
           .then(r => r.blob())
           .then(blob => {
+            const ts = Date.now()
             const a = document.createElement('a')
             a.href = URL.createObjectURL(blob)
-            a.download = `jimeng-${i + 1}.webp`
+            a.download = `jimeng-${ts}-${i + 1}.webp`
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
             URL.revokeObjectURL(a.href)
-            return { file: `jimeng-${i + 1}.webp`, size: String(blob.size), prompt: img.prompt.substring(0, 50) }
+            return { file: `jimeng-${ts}-${i + 1}.webp`, size: String(blob.size), prompt: img.prompt.substring(0, 50) }
           })
           .catch(e => ({ file: '', size: '0', prompt: 'failed: ' + e.message }))
       }))
