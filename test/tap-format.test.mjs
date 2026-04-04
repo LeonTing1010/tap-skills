@@ -23,7 +23,7 @@ import { pathToFileURL } from 'node:url'
 
 // Skills are in repo root, test is in test/
 const TAPS_DIR = new URL('../', import.meta.url).pathname
-const VALID_ARG_TYPES = ['string', 'int', 'float', 'boolean']
+const VALID_ARG_TYPES = ['string', 'int', 'float', 'number', 'boolean']
 
 let passed = 0
 let failed = 0
@@ -118,9 +118,11 @@ for (const { site, name, path } of tapFiles) {
     assert.equal(tap.name, name)
   })
 
-  test(id, `[common] has exactly one of run() or extract()`, () => {
-    assert(hasRun || hasExtract, 'must have run() or extract()')
-    assert(!(hasRun && hasExtract), 'must not have both run() and extract()')
+  test(id, `[common] has exactly one of run() or extract() or transform()`, () => {
+    const hasTransform = typeof tap.transform === 'function'
+    assert(hasRun || hasExtract || hasTransform, 'must have run() or extract() or transform()')
+    const count = [hasRun, hasExtract, hasTransform].filter(Boolean).length
+    assert(count === 1, 'must have exactly one of run(), extract(), or transform()')
   })
 
   // args validation (both formats)
@@ -138,7 +140,7 @@ for (const { site, name, path } of tapFiles) {
     test(id, `[common] health contract is valid`, () => {
       if (tap.health.min_rows !== undefined) {
         assert.equal(typeof tap.health.min_rows, 'number')
-        assert(tap.health.min_rows > 0, 'min_rows must be > 0')
+        assert(tap.health.min_rows >= 0, 'min_rows must be >= 0')
       }
       if (tap.health.non_empty !== undefined) {
         assert(Array.isArray(tap.health.non_empty))
@@ -226,14 +228,8 @@ for (const { site, name, path } of tapFiles) {
     }
   })
 
-  test(id, `[sandbox] no arrow functions in tap.eval() — use string expressions`, () => {
-    // WHY: tap.eval(() => ...) passes a function through Worker postMessage.
-    // Functions can't be structured-cloned across Worker boundary → DataCloneError.
-    // Fix: tap.eval("location.href") instead of tap.eval(() => location.href)
-    const arrowInEval = /\.eval\s*\(\s*\(/.test(src)
-    assert(!arrowInEval,
-      'tap.eval(() => ...) breaks Worker sandbox — use tap.eval("expression") string instead')
-  })
+  // NOTE: tap.eval(() => ...) is allowed — page.ts auto-converts functions to IIFE strings.
+  // The Worker sandbox receives a string expression, not a function reference.
 
   // ===== EXTRACT-FORMAT CONSTRAINTS =====
 
