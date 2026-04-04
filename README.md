@@ -19,8 +19,11 @@ This is the community skills repository for [Tap](https://github.com/LeonTing101
 ## Install
 
 ```bash
-tap install      # Clones to ~/.tap/skills/, all skills immediately available
-tap update       # Pull latest skills + core updates
+# Install Tap (includes skills automatically)
+curl -fsSL https://taprun.dev/install.sh | sh
+
+# Update skills to latest
+tap update
 ```
 
 ## Usage
