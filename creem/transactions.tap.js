@@ -5,7 +5,7 @@ const columns = ["amount", "status", "description", "customer", "date"];
 const args = {
   key: { type: "string", required: true, description: "Creem API key" },
 };
-const health = { min_rows: 0 };
+const health = { min_rows: 1 };
 const examples = [{ key: "creem_test_xxx" }];
 
 async function run(tap, args) {
