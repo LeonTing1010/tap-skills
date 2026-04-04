@@ -1,7 +1,7 @@
 export default {
   site: "weread",
   name: "shelf",
-  description: "微信读书书架（需登录）",
+  description: "WeRead bookshelf (login required)",
   url: "https://weread.qq.com/web/shelf",
   health: { min_rows: 1, non_empty: ["title"] },
 

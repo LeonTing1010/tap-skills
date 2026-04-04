@@ -1,11 +1,11 @@
 export default {
   site: "scys",
   name: "research",
-  description: "搜索生财有术并提取飞书文档链接（组合 search + article tap）",
+  description: "Search SCYS and extract Feishu doc links (search + article)",
   columns: ["title", "feishu", "url", "badge", "date", "preview"],
   args: {
-    keyword: { type: "string", description: "搜索关键词" },
-    limit:   { type: "int",    description: "提取飞书链接的文章数量，默认5", required: false }
+    keyword: { type: "string", description: "Search keyword" },
+    limit:   { type: "int",    description: "Number of articles to extract Feishu links from, default 5", required: false }
   },
   health: { min_rows: 1, non_empty: ["title"] },
 

@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "post_detail",
-  description: "搜索→点击→从弹窗SSR state提取帖子详情+评论内容",
+  description: "Search, click, extract post detail and comments (SSR)",
   columns: ["type", "content", "likes", "author"],
   args: {
     keyword: { type: "string" },

@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "search_fast",
-  description: "纯 HTTP 搜索小红书（无浏览器，从 SSR HTML 提取 __INITIAL_STATE__）",
+  description: "HTTP-only Xiaohongshu search (SSR state extraction)",
   url: "https://www.xiaohongshu.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },

@@ -1,7 +1,7 @@
 export default {
   site: "weibo",
   name: "hot",
-  description: "微博热搜榜",
+  description: "Weibo hot search trending topics",
   url: "https://weibo.com",
 
   extract: async () => {

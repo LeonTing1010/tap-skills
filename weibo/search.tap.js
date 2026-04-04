@@ -1,7 +1,7 @@
 export default {
   site: "weibo",
   name: "search",
-  description: "搜索微博内容，返回标题+互动数+作者",
+  description: "Search Weibo posts with title, engagement, author",
   url: "https://weibo.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },

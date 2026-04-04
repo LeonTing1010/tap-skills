@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "nav_publish",
-  description: "导航到小红书发布页面",
+  description: "Navigate to Xiaohongshu publish page",
   columns: ["status", "url"],
   args: {},
 

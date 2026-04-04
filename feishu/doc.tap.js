@@ -1,7 +1,7 @@
 export default {
   site: "feishu",
   name: "doc",
-  description: "读取当前已打开的飞书文档全文（block_map直接提取 + TOC懒加载兜底）",
+  description: "Read current Feishu doc full text (block_map + TOC fallback)",
   columns: ["type", "content", "level"],
   args: {},
   health: { min_rows: 5, non_empty: ["content"] },

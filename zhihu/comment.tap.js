@@ -1,7 +1,7 @@
 export default {
   site: "zhihu",
   name: "comment",
-  description: "对当前已打开的知乎回答发表评论",
+  description: "Post a comment on current Zhihu answer",
   columns: ["status", "comment"],
   args: {
     comment: { type: "string" }

@@ -1,7 +1,7 @@
 export default {
   site: "juejin",
   name: "hot",
-  description: "掘金热门文章",
+  description: "Juejin trending articles",
   url: "https://juejin.cn",
 
   extract: async () => {

@@ -1,7 +1,7 @@
 export default {
   site: "weibo",
   name: "open",
-  description: "搜索并打开第N条微博帖子",
+  description: "Search and open Nth Weibo post",
   columns: ["mid", "title", "author", "url"],
   args: {
     keyword: { type: "string" },

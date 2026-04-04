@@ -1,7 +1,7 @@
 export default {
   site: "wechat",
   name: "open",
-  description: "搜索并打开微信公众号文章（通过关键词+序号或直接URL）",
+  description: "Search and open WeChat article (keyword+index or URL)",
   columns: ["title", "author", "url"],
   args: {
     keyword: { type: "string", default: "" },

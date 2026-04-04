@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "like",
-  description: "点赞当前笔记",
+  description: "Like current Xiaohongshu note",
   columns: ["status"],
   args: {},
 

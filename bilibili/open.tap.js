@@ -1,7 +1,7 @@
 export default {
   site: "bilibili",
   name: "open",
-  description: "打开B站视频页面（直接bvid或搜索后打开第N个结果）",
+  description: "Open Bilibili video by bvid or search Nth result",
   columns: ["bvid", "title", "author", "url"],
   args: {
     bvid: { type: "string", default: "" },

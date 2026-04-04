@@ -1,7 +1,7 @@
 export default {
   site: "douyin",
   name: "reply",
-  description: "回复抖音视频下的指定评论",
+  description: "Reply to a specific comment on Douyin video",
   columns: ["status", "comment"],
   args: {
     index: { type: "int", default: 1 },

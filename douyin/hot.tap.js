@@ -1,7 +1,7 @@
 export default {
   site: "douyin",
   name: "hot",
-  description: "抖音热搜榜",
+  description: "Douyin hot search rankings",
   url: "https://www.douyin.com",
   health: { min_rows: 5, non_empty: ["title"] },
 

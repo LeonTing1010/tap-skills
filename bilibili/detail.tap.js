@@ -1,7 +1,7 @@
 export default {
   site: "bilibili",
   name: "detail",
-  description: "读取当前B站视频的详情+评论（从API提取）",
+  description: "Read current Bilibili video details and comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },

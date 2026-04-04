@@ -1,7 +1,7 @@
 export default {
   site: "jimeng",
   name: "history",
-  description: "即梦 AI 查看历史任务（需要本地 dreamina CLI）",
+  description: "Jimeng AI task history (requires local dreamina CLI)",
   columns: ["submit_id", "status", "type", "created_at"],
   health: { min_rows: 1 },
   args: {

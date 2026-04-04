@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "notifications",
-  description: "读取小红书通知（新粉丝、评论、点赞）",
+  description: "Read Xiaohongshu notifications (followers, comments, likes)",
   url: "https://creator.xiaohongshu.com/creator/message",
   health: { min_rows: 1, non_empty: ["type"] },
 

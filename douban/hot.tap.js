@@ -1,7 +1,7 @@
 export default {
   site: "douban",
   name: "hot",
-  description: "豆瓣热门电影",
+  description: "Douban trending movies",
   url: "https://movie.douban.com",
   health: { min_rows: 5, non_empty: ["title"] },
 

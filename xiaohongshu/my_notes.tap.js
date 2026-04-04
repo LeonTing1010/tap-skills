@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "my_notes",
-  description: "读取自己发布的笔记列表及互动数据",
+  description: "Read my published notes and engagement stats",
   columns: ["title", "views", "likes", "collects", "comments", "shares", "publish_date"],
   args: { limit: { type: "int", default: 20 } },
   health: { min_rows: 1, non_empty: ["title"] },

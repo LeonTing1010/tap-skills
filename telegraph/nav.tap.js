@@ -1,7 +1,7 @@
 export default {
   site: "telegraph",
   name: "nav",
-  description: "导航到 Telegraph 编辑器并激活",
+  description: "Navigate to Telegraph editor and activate",
   columns: ["status", "url"],
   args: {},
 

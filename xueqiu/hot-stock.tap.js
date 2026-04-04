@@ -1,7 +1,7 @@
 export default {
   site: "xueqiu",
   name: "hot-stock",
-  description: "雪球热门股票",
+  description: "Xueqiu hot stocks",
   url: "https://xueqiu.com",
 
   extract: async () => {

@@ -1,7 +1,7 @@
 export default {
   site: "wechat",
   name: "search",
-  description: "搜索微信公众号文章（通过搜狗微信搜索）",
+  description: "Search WeChat articles via Sogou search",
   columns: ["title", "author", "description", "url"],
   args: {
     keyword: { type: "string" },

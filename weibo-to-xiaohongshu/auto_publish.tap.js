@@ -1,10 +1,10 @@
 export default {
   site: "weibo-to-xiaohongshu",
   name: "auto_publish",
-  description: "微博热点转小红书笔记自动化 — 获取热搜→生成内容→发布",
+  description: "Auto-publish Weibo trending to Xiaohongshu note",
   columns: ["status", "topic", "note_url"],
   args: {
-    hot_index: { type: "int", default: 1, description: "选择微博热搜第 N 个话题" }
+    hot_index: { type: "int", default: 1, description: "Pick Nth Weibo trending topic" }
   },
 
   async run(tap, args) {

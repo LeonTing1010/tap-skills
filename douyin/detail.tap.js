@@ -1,7 +1,7 @@
 export default {
   site: "douyin",
   name: "detail",
-  description: "读取当前已打开视频的详情+评论（从API提取）",
+  description: "Read current Douyin video details and comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },

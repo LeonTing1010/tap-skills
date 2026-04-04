@@ -1,7 +1,7 @@
 export default {
   site: "weibo",
   name: "post",
-  description: "发布微博帖子",
+  description: "Publish a Weibo post",
   columns: ["status", "url"],
   args: {
     content: { type: "string" }

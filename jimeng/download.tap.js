@@ -1,12 +1,12 @@
 export default {
   site: "jimeng",
   name: "download",
-  description: "下载即梦AI最新生成的图片到本地（直接调API，不依赖导航）",
+  description: "Download latest Jimeng AI images locally (direct API)",
   columns: ["file", "size", "prompt"],
   args: {
-    count: { type: "int", default: 4, description: "下载图片数量" },
-    dir: { type: "string", default: "/tmp/jimeng", description: "保存目录（浏览器下载到~/Downloads，dir参数备用）" },
-    prompt_filter: { type: "string", default: "", description: "按 prompt 关键词筛选，空字符串取最新" }
+    count: { type: "int", default: 4, description: "Number of images to download" },
+    dir: { type: "string", default: "/tmp/jimeng", description: "Save directory (browser downloads to ~/Downloads, dir as fallback)" },
+    prompt_filter: { type: "string", default: "", description: "Filter by prompt keyword, empty string gets latest" }
   },
 
   async run(tap, args) {

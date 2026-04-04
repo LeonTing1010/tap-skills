@@ -1,7 +1,7 @@
 export default {
   site: "wechat",
   name: "detail",
-  description: "读取当前已打开的微信公众号文章详情（标题、正文、作者、日期）",
+  description: "Read current WeChat article (title, body, author, date)",
   columns: ["type", "content", "author", "date"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },

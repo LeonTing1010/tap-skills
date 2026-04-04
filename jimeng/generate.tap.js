@@ -1,7 +1,7 @@
 export default {
   site: "jimeng",
   name: "generate",
-  description: "即梦AI 文生图 — 提交 prompt 触发生成（需先调用 jimeng/nav）",
+  description: "Jimeng AI text-to-image generation (call nav first)",
   columns: ["status", "prompt"],
   args: {
     prompt: { type: "string" }

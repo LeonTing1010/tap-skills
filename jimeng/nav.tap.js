@@ -1,7 +1,7 @@
 export default {
   site: "jimeng",
   name: "nav",
-  description: "导航到即梦AI文生图页面",
+  description: "Navigate to Jimeng AI text-to-image page",
   columns: ["status", "url"],
   args: {},
 

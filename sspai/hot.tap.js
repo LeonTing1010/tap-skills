@@ -1,7 +1,7 @@
 export default {
   site: "sspai",
   name: "hot",
-  description: "少数派热门文章",
+  description: "Sspai trending articles",
   url: "https://sspai.com",
   health: { min_rows: 5, non_empty: ["title", "author"] },
 

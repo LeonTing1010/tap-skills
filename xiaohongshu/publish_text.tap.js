@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "publish_text",
-  description: "发布纯文字小红书笔记（无需图片）",
+  description: "Publish text-only Xiaohongshu note (no images)",
   columns: ["status", "url"],
   args: {
     title: { type: "string" },

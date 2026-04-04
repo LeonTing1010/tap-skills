@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "hot",
-  description: "小红书热搜话题",
+  description: "Xiaohongshu hot search topics",
   columns: ["rank", "title", "hot"],
   args: { limit: { type: "int", default: 20 } },
   health: { min_rows: 5, non_empty: ["title"] },

@@ -1,7 +1,7 @@
 export default {
   site: "douyin",
   name: "open",
-  description: "搜索并打开抖音视频，或直接按aweme_id打开",
+  description: "Search and open Douyin video, or open by aweme_id",
   columns: ["aweme_id", "title", "author", "url"],
   args: {
     keyword: { type: "string", default: "" },

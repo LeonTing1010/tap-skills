@@ -1,14 +1,14 @@
 export default {
   site: "juejin",
   name: "publish",
-  description: "在掘金发布文章（API 方式）",
+  description: "Publish article on Juejin (API)",
   columns: ["status", "url"],
   args: {
     title: { type: "string" },
     content: { type: "string", description: "Markdown content" },
-    category: { type: "string", description: "分类: 后端/前端/Android/iOS/人工智能/开发工具/代码人生/阅读 (default: 前端)" },
+    category: { type: "string", description: "Category: Backend/Frontend/Android/iOS/AI/DevTools/Life/Reading (default: Frontend)" },
     tags: { type: "string", description: "Comma-separated tag keywords to search (optional)" },
-    brief: { type: "string", description: "摘要 (optional, max 100 chars)" }
+    brief: { type: "string", description: "Summary (optional, max 100 chars)" }
   },
 
   async run(tap, args) {

@@ -1,7 +1,7 @@
 export default {
   site: "douyin",
   name: "comment",
-  description: "对当前已打开的抖音视频发表评论",
+  description: "Post a comment on current Douyin video",
   columns: ["status", "comment"],
   args: {
     comment: { type: "string" }

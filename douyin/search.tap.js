@@ -1,7 +1,7 @@
 export default {
   site: "douyin",
   name: "search",
-  description: "搜索抖音视频，返回标题+点赞数+作者",
+  description: "Search Douyin videos with title, likes, author",
   url: "https://www.douyin.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },

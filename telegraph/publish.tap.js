@@ -1,7 +1,7 @@
 export default {
   site: "telegraph",
   name: "publish",
-  description: "Telegraph 匿名发布文章（需先调用 telegraph/nav）",
+  description: "Publish anonymous Telegraph article (call nav first)",
   columns: ["status", "url"],
   args: {
     title: { type: "string", default: "Untitled" },

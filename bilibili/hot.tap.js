@@ -1,7 +1,7 @@
 export default {
   site: "bilibili",
   name: "hot",
-  description: "B站热门视频",
+  description: "Bilibili trending videos",
   url: "https://www.bilibili.com",
   health: { min_rows: 5, non_empty: ["title"] },
 

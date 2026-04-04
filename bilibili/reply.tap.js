@@ -1,7 +1,7 @@
 export default {
   site: "bilibili",
   name: "reply",
-  description: "回复B站视频下的指定评论",
+  description: "Reply to a specific comment on Bilibili video",
   columns: ["status", "comment"],
   args: {
     index: { type: "int", default: 1 },

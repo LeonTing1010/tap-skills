@@ -1,7 +1,7 @@
 export default {
   site: "zhihu",
   name: "hot",
-  description: "知乎热榜",
+  description: "Zhihu hot topics",
   url: "https://www.zhihu.com",
 
   extract: async () => {

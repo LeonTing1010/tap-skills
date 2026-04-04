@@ -1,7 +1,7 @@
 export default {
   site: "zhihu",
   name: "detail",
-  description: "读取当前已打开知乎问题的详情+回答+评论（API优先）",
+  description: "Read current Zhihu question details, answers, comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },

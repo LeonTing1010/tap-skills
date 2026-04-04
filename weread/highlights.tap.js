@@ -1,7 +1,7 @@
 export default {
   site: "weread",
   name: "highlights",
-  description: "微信读书划线笔记（需登录）",
+  description: "WeRead book highlights (login required)",
   url: "https://weread.qq.com/web/shelf",
   args: { bookId: { type: "string" } },
   health: { min_rows: 1, non_empty: ["text"] },

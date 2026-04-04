@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "reply",
-  description: "回复自己笔记下的评论",
+  description: "Reply to comments on my Xiaohongshu notes",
   columns: ["status"],
   args: {
     note_id: { type: "string" },

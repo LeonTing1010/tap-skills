@@ -1,7 +1,7 @@
 export default {
   site: "zhihu",
   name: "open",
-  description: "搜索并打开第N条知乎问题",
+  description: "Search and open Nth Zhihu question",
   columns: ["qid", "title", "author", "url"],
   args: {
     keyword: { type: "string" },

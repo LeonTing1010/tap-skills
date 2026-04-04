@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "search",
-  description: "搜索小红书笔记（SSR state提取，含评论数、收藏数）",
+  description: "Search Xiaohongshu posts with comments, favorites (SSR)",
   url: "https://www.xiaohongshu.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },

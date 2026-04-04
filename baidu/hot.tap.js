@@ -1,7 +1,7 @@
 export default {
   site: "baidu",
   name: "hot",
-  description: "百度热搜榜",
+  description: "Baidu hot search rankings",
   url: "https://www.baidu.com",
   health: { min_rows: 5, non_empty: ["title"] },
 

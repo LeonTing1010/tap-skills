@@ -1,12 +1,12 @@
 export default {
   site: "zhihu",
   name: "publish",
-  description: "在知乎发布文章（专栏）",
+  description: "Publish article on Zhihu column",
   columns: ["status", "url"],
   args: {
     title: { type: "string" },
     content: { type: "string", description: "HTML or plain text content" },
-    column: { type: "string", description: "专栏 ID (optional, publishes to personal column if omitted)" },
+    column: { type: "string", description: "Column ID (optional, publishes to personal column if omitted)" },
     topics: { type: "string", description: "Comma-separated topic names (optional)" }
   },
 

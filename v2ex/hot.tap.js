@@ -1,7 +1,7 @@
 export default {
   site: "v2ex",
   name: "hot",
-  description: "V2EX 热门话题",
+  description: "V2EX hot topics",
   url: "https://www.v2ex.com",
   health: { min_rows: 5, non_empty: ["title"] },
 

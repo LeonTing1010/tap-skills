@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "profile",
-  description: "读取小红书创作者中心的账号数据",
+  description: "Read Xiaohongshu creator center account data",
   columns: ["followers", "following", "likes_collects", "views", "likes", "comments", "collects", "shares"],
   health: { min_rows: 1, non_empty: ["followers"] },
 

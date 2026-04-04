@@ -1,10 +1,10 @@
 export default {
   site: "scys",
   name: "article",
-  description: "读取生财有术文章：标题、作者、互动数据、正文，自动跟进飞书文档全文",
+  description: "Read SCYS article with title, author, stats, full text",
   columns: ["type", "content", "meta"],
   args: {
-    url: { type: "string", description: "文章 URL（可选，不传则读取当前页面）", required: false }
+    url: { type: "string", description: "Article URL (optional, reads current page if omitted)", required: false }
   },
   health: { min_rows: 3, non_empty: ["content"] },
 

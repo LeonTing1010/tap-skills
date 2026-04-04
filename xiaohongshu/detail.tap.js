@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "detail",
-  description: "读取当前已打开笔记的详情+评论（从SSR state提取）",
+  description: "Read current Xiaohongshu note details and comments (SSR)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },

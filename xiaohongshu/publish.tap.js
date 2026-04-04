@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "publish",
-  description: "发布小红书图文笔记",
+  description: "Publish Xiaohongshu image-text post",
   columns: ["status", "url"],
   args: {
     title: { type: "string", default: "" },

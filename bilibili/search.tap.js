@@ -1,7 +1,7 @@
 export default {
   site: "bilibili",
   name: "search",
-  description: "搜索B站视频（API提取）",
+  description: "Search Bilibili videos (API)",
   url: "https://www.bilibili.com",
   args: {
     keyword: { type: "string" }

@@ -1,7 +1,7 @@
 export default {
   site: "toutiao",
   name: "hot",
-  description: "头条热榜",
+  description: "Toutiao hot topics",
   url: "https://www.toutiao.com",
 
   extract: async () => {

@@ -1,13 +1,13 @@
 export default {
   site: "juejin",
   name: "post",
-  description: "在掘金发布文章",
+  description: "Publish article on Juejin",
   columns: ["status", "url"],
   args: {
-    title: { type: "string", description: "文章标题" },
-    body: { type: "string", description: "文章正文 (Markdown)" },
-    category: { type: "string", description: "分类: 前端/后端/Android/iOS/AI/工具" },
-    tags: { type: "string", description: "逗号分隔标签 (最多3个)" }
+    title: { type: "string", description: "Article title" },
+    body: { type: "string", description: "Article body (Markdown)" },
+    category: { type: "string", description: "Category: Frontend/Backend/Android/iOS/AI/Tools" },
+    tags: { type: "string", description: "Comma-separated tags (max 3)" }
   },
 
   async run(tap, args) {

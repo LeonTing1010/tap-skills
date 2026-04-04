@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "open",
-  description: "搜索并打开第N条笔记的详情弹窗",
+  description: "Search and open Nth Xiaohongshu note detail",
   columns: ["note_id", "title", "author", "url"],
   args: {
     keyword: { type: "string" },

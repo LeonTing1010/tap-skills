@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "comment",
-  description: "对当前已打开的笔记发表评论",
+  description: "Post a comment on current Xiaohongshu note",
   columns: ["status", "comment"],
   args: {
     comment: { type: "string" }

@@ -1,7 +1,7 @@
 export default {
   site: "weibo",
   name: "detail",
-  description: "读取当前已打开微博帖子的详情+评论（API优先）",
+  description: "Read current Weibo post details and comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },

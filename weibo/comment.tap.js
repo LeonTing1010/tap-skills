@@ -1,7 +1,7 @@
 export default {
   site: "weibo",
   name: "comment",
-  description: "对当前已打开的微博帖子发表评论",
+  description: "Post a comment on current Weibo post",
   columns: ["status", "comment"],
   args: {
     comment: { type: "string" }

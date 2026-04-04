@@ -1,7 +1,7 @@
 export default {
   site: "zhihu",
   name: "answer",
-  description: "在当前知乎问题页面写回答（需先打开问题页）",
+  description: "Write answer on current Zhihu question page",
   columns: ["status", "url"],
   args: {
     content: { type: "string" }

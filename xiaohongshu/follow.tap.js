@@ -1,7 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "follow",
-  description: "关注当前笔记的作者",
+  description: "Follow the author of current note",
   columns: ["status", "user"],
   args: {},
 
