@@ -1,8 +1,8 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/LeonTing1010/tap/master/.github/logo-woodpecker.svg" width="120" height="120" alt="Tap">
   <h1 align="center">tap-skills</h1>
-  <p align="center"><b>119 community skills across 55 sites for <a href="https://github.com/LeonTing1010/tap">Tap</a></b></p>
-  <p align="center"><i>Deterministic .tap.js scripts — zero AI at runtime</i></p>
+  <p align="center"><b>133 community skills across 58 sites for <a href="https://github.com/LeonTing1010/tap">Tap</a></b></p>
+  <p align="center"><i>Deterministic .tap.js scripts — zero AI at runtime | <a href="https://taprun.dev">taprun.dev</a></i></p>
 </p>
 
 <p align="center">
@@ -14,7 +14,7 @@
 
 ---
 
-This is the community skills repository for [Tap](https://github.com/LeonTing1010/tap) — the universal protocol for AI to operate any interface. Every `.tap.js` file here is a deterministic script that runs forever with zero AI tokens.
+This is the community skills repository for [Tap](https://github.com/LeonTing1010/tap) — the universal protocol for AI to operate any interface. Every `.tap.js` file here is a deterministic script that runs forever with zero AI tokens. See [taprun.dev](https://taprun.dev) for the product.
 
 ## Install
 
