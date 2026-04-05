@@ -1,8 +1,8 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/LeonTing1010/tap/main/extension/icons/icon.svg" width="120" height="120" alt="Tap">
   <h1 align="center">tap-skills</h1>
-  <p align="center"><b>133 community skills across 58 sites for <a href="https://github.com/LeonTing1010/tap">Tap</a></b></p>
-  <p align="center"><i>Deterministic .tap.js scripts — zero AI at runtime | <a href="https://taprun.dev">taprun.dev</a></i></p>
+  <p align="center"><b>200+ community skills across 65+ sites for <a href="https://github.com/LeonTing1010/tap">Tap</a></b></p>
+  <p align="center"><i>AI compiles it once. Programs run forever at $0. | <a href="https://taprun.dev">taprun.dev</a></i></p>
 </p>
 
 <p align="center">
@@ -14,7 +14,7 @@
 
 ---
 
-This is the community skills repository for [Tap](https://github.com/LeonTing1010/tap) — the universal protocol for AI to operate any interface. Every `.tap.js` file here is a deterministic script that runs forever with zero AI tokens. See [taprun.dev](https://taprun.dev) for the product.
+This is the community skills repository for [Tap](https://github.com/LeonTing1010/tap) — the AI interface compiler. Every `.tap.js` file here is a deterministic script that runs forever with zero AI tokens. See [taprun.dev](https://taprun.dev) for the product.
 
 ## Install
 
@@ -46,55 +46,55 @@ Agent: [calls tap.run("github", "trending")]
 
 ### Trending / Hot
 
-| Site | Skill | Strategy |
+| Site | Skill |
 |------|-------|----------|
-| GitHub | `github/trending` | DOM |
-| Hacker News | `hackernews/hot` | API |
-| Reddit | `reddit/hot` | API |
-| Product Hunt | `producthunt/hot` | DOM |
-| X / Twitter | `x/trending` | DOM |
-| YouTube | `youtube/trending` | DOM |
-| Bluesky | `bluesky/trending` | DOM |
-| Bilibili | `bilibili/hot` | API |
-| Zhihu | `zhihu/hot` | API |
-| Weibo | `weibo/hot` | API |
-| Xiaohongshu | `xiaohongshu/hot` | SSR |
-| Douyin | `douyin/hot` | API |
-| V2EX | `v2ex/hot` | DOM |
-| Juejin | `juejin/hot` | DOM |
-| Lobsters | `lobsters/hot` | DOM |
-| Dev.to | `devto/top` | DOM |
-| Stack Overflow | `stackoverflow/hot` | DOM |
-| Medium | `medium/hot` | DOM |
-| 36Kr | `36kr/hot` | DOM |
-| Toutiao | `toutiao/hot` | DOM |
-| Baidu | `baidu/hot` | DOM |
-| SSPai | `sspai/hot` | DOM |
-| Douban | `douban/hot` | DOM |
-| CoinGecko | `coingecko/top` | DOM |
-| Steam | `steam/top-sellers` | DOM |
-| Crates.io | `crates/popular` | DOM |
-| PyPI | `pypi/top` | DOM |
-| Pixiv | `pixiv/ranking` | DOM |
-| Wikipedia | `wikipedia/most-read` | DOM |
-| Google Trends | `google/trends` | DOM |
-| Xueqiu | `xueqiu/hot-stock` | DOM |
+| GitHub | `github/trending` |
+| Hacker News | `hackernews/hot` |
+| Reddit | `reddit/hot` |
+| Product Hunt | `producthunt/hot` |
+| X / Twitter | `x/trending` |
+| YouTube | `youtube/trending` |
+| Bluesky | `bluesky/trending` |
+| Bilibili | `bilibili/hot` |
+| Zhihu | `zhihu/hot` |
+| Weibo | `weibo/hot` |
+| Xiaohongshu | `xiaohongshu/hot` |
+| Douyin | `douyin/hot` |
+| V2EX | `v2ex/hot` |
+| Juejin | `juejin/hot` |
+| Lobsters | `lobsters/hot` |
+| Dev.to | `devto/top` |
+| Stack Overflow | `stackoverflow/hot` |
+| Medium | `medium/hot` |
+| 36Kr | `36kr/hot` |
+| Toutiao | `toutiao/hot` |
+| Baidu | `baidu/hot` |
+| SSPai | `sspai/hot` |
+| Douban | `douban/hot` |
+| CoinGecko | `coingecko/top` |
+| Steam | `steam/top-sellers` |
+| Crates.io | `crates/popular` |
+| PyPI | `pypi/top` |
+| Pixiv | `pixiv/ranking` |
+| Wikipedia | `wikipedia/most-read` |
+| Google Trends | `google/trends` |
+| Xueqiu | `xueqiu/hot-stock` |
 
 ### Search
 
-| Site | Skill | Strategy |
+| Site | Skill |
 |------|-------|----------|
-| Reddit | `reddit/search` | API |
-| arXiv | `arxiv/search` | API |
-| X / Twitter | `x/search` | DOM |
-| Medium | `medium/search` | DOM |
-| Zhihu | `zhihu/search` | API |
-| Weibo | `weibo/search` | API |
-| Xiaohongshu | `xiaohongshu/search` | SSR |
-| Bilibili | `bilibili/search` | API |
-| Douyin | `douyin/search` | API |
-| WeChat | `wechat/search` | DOM |
-| Dictionary | `dictionary/search` | DOM |
+| Reddit | `reddit/search` |
+| arXiv | `arxiv/search` |
+| X / Twitter | `x/search` |
+| Medium | `medium/search` |
+| Zhihu | `zhihu/search` |
+| Weibo | `weibo/search` |
+| Xiaohongshu | `xiaohongshu/search` |
+| Bilibili | `bilibili/search` |
+| Douyin | `douyin/search` |
+| WeChat | `wechat/search` |
+| Dictionary | `dictionary/search` |
 
 ### Deep Read (detail + comments)
 
