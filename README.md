@@ -5,7 +5,7 @@
 <h1 align="center">tap-skills</h1>
 
 <p align="center">
-  <b>200+ community skills across 65+ sites for <a href="https://github.com/LeonTing1010/tap">Tap</a></b>
+  <b>140+ community skills across 68 sites for <a href="https://github.com/LeonTing1010/tap">Tap</a></b>
 </p>
 
 <p align="center">
@@ -16,144 +16,197 @@
   <a href="https://github.com/LeonTing1010/tap-skills/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/LeonTing1010/tap-skills/ci.yml?style=flat-square&label=CI" alt="CI"></a>
   <a href="https://github.com/LeonTing1010/tap-skills/stargazers"><img src="https://img.shields.io/github/stars/LeonTing1010/tap-skills?style=flat-square" alt="Stars"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/LeonTing1010/tap-skills?style=flat-square" alt="License"></a>
-  <a href="https://github.com/LeonTing1010/tap-skills/pulls"><img src="https://img.shields.io/github/issues-pr/LeonTing1010/tap-skills?style=flat-square&label=PRs" alt="PRs"></a>
 </p>
 
 ---
 
-Community skills for [Tap](https://github.com/LeonTing1010/tap) — the AI interface compiler. Every `.tap.js` file is a program that runs forever with zero AI cost.
+Community skills for [Tap](https://github.com/LeonTing1010/tap) — the AI interface compiler. Every `.tap.js` file is a program that runs forever at $0.
 
-## Install
+## Install & Usage
 
 ```bash
-curl -fsSL https://taprun.dev/install.sh | sh   # Install Tap + skills
+curl -fsSL https://taprun.dev/install.sh | sh   # Install Tap + all skills
 tap update                                        # Update to latest
+tap list                                          # See all skills
+tap github trending                               # Run any skill
 ```
 
-## Usage
+## All Skills
 
-```bash
-tap list                             # See all skills
-tap github trending                  # Run a skill
-tap weibo hot                        # 微博热搜
-tap xiaohongshu search --keyword "AI"  # 小红书搜索
-```
+### Trending & Hot
 
-Or ask your AI agent (Claude Code, Cursor, etc.):
+| Site | Skill | Description |
+|------|-------|-------------|
+| GitHub | `github/trending` | Trending repositories |
+| Hacker News | `hackernews/hot` | Top stories |
+| Reddit | `reddit/hot` | Hot posts |
+| Product Hunt | `producthunt/hot` | Today's hot products |
+| X / Twitter | `x/trending` | Trending topics |
+| YouTube | `youtube/trending` | Trending videos |
+| Bluesky | `bluesky/trending` | Trending topics |
+| Bilibili | `bilibili/hot` | Trending videos |
+| Zhihu | `zhihu/hot` | Hot topics |
+| Weibo | `weibo/hot` | Hot search |
+| Xiaohongshu | `xiaohongshu/hot` | Hot search topics |
+| Douyin | `douyin/hot` | Hot search |
+| V2EX | `v2ex/hot` | Hot topics |
+| Juejin | `juejin/hot` | Hot articles |
+| Lobsters | `lobsters/hot` | Hot stories |
+| Dev.to | `devto/top` | Top articles |
+| Stack Overflow | `stackoverflow/hot` | Hot questions |
+| Medium | `medium/hot` | Hot articles |
+| 36Kr | `36kr/hot` | Tech & startup news |
+| Baidu | `baidu/hot` | Hot search |
+| Toutiao | `toutiao/hot` | Hot topics |
+| SSPai | `sspai/hot` | Trending articles |
+| Douban | `douban/hot` | Trending movies |
+| TikTok | `tiktok/trending` | Trending videos |
+| ESPN | `espn/scores` | Headlines & scores |
+| CoinGecko | `coingecko/top` | Top cryptocurrencies |
+| Steam | `steam/top-sellers` | Top selling games |
+| Xueqiu | `xueqiu/hot-stock` | Hot stocks |
+| Google | `google/trends` | Trending searches |
 
-```
-You:   What's trending on GitHub?
-Agent: Here are today's top repos...
-```
+### News & Reading
 
-## Skills
-
-### Trending
-
-| Site | Skill |
-|------|-------|
-| GitHub | `github/trending` |
-| Hacker News | `hackernews/hot` |
-| Reddit | `reddit/hot` |
-| Product Hunt | `producthunt/hot` |
-| X / Twitter | `x/trending` |
-| YouTube | `youtube/trending` |
-| Bluesky | `bluesky/trending` |
-| Bilibili | `bilibili/hot` |
-| Zhihu | `zhihu/hot` |
-| Weibo | `weibo/hot` |
-| Xiaohongshu | `xiaohongshu/hot` |
-| Douyin | `douyin/hot` |
-| V2EX | `v2ex/hot` |
-| Juejin | `juejin/hot` |
-| Lobsters | `lobsters/hot` |
-| Dev.to | `devto/top` |
-| Stack Overflow | `stackoverflow/hot` |
-| Medium | `medium/hot` |
-| 36Kr | `36kr/hot` |
-| Baidu | `baidu/hot` |
-| CoinGecko | `coingecko/top` |
-| Steam | `steam/top-sellers` |
-| PyPI | `pypi/top` |
-| Google Trends | `google/trends` |
+| Site | Skill | Description |
+|------|-------|-------------|
+| BBC | `bbc/news` | Top stories |
+| Reuters | `reuters/news` | Top news |
+| TechCrunch | `techcrunch/latest` | Latest articles |
+| Wikipedia | `wikipedia/most-read` | Most read today |
+| WeRead | `weread/shelf` | Bookshelf |
+| WeRead | `weread/highlights` | Book highlights |
+| Rotten Tomatoes | `rottentomatoes/opening` | Popular movies |
+| IMDB | `imdb/top` | Top movies |
 
 ### Search
 
-| Site | Skill |
-|------|-------|
-| arXiv | `arxiv/search` |
-| Reddit | `reddit/search` |
-| Zhihu | `zhihu/search` |
-| Xiaohongshu | `xiaohongshu/search` |
-| Bilibili | `bilibili/search` |
-| Weibo | `weibo/search` |
-| X / Twitter | `x/search` |
-| Wikipedia | `wikipedia/search` |
-| Medium | `medium/search` |
+| Site | Skill | Description |
+|------|-------|-------------|
+| arXiv | `arxiv/search` | Search papers |
+| Reddit | `reddit/search` | Search posts |
+| X / Twitter | `x/search` | Search posts |
+| Zhihu | `zhihu/search` | Search questions |
+| Weibo | `weibo/search` | Search posts |
+| Xiaohongshu | `xiaohongshu/search` | Search notes |
+| Xiaohongshu | `xiaohongshu/search_fast` | Fast HTTP search |
+| Bilibili | `bilibili/search` | Search videos |
+| Medium | `medium/search` | Search articles |
+| WeChat | `wechat/search` | Search articles |
+| Dictionary | `dictionary/search` | English dictionary |
 
-### Read
+### Deep Read
 
-| Site | Skill |
-|------|-------|
-| Zhihu | `zhihu/detail` |
-| Bilibili | `bilibili/detail` |
-| Xiaohongshu | `xiaohongshu/detail` |
-| WeRead | `weread/books` |
-| BBC | `bbc/news` |
+| Site | Skill | Description |
+|------|-------|-------------|
+| Zhihu | `zhihu/detail` | Question + answers + comments |
+| Bilibili | `bilibili/detail` | Video details + comments |
+| Weibo | `weibo/detail` | Post details + comments |
+| Xiaohongshu | `xiaohongshu/detail` | Note details + comments |
+| Xiaohongshu | `xiaohongshu/post_detail` | Search → open → extract |
+| Douyin | `douyin/detail` | Video details + comments |
+| WeChat | `wechat/detail` | Article full text |
+| Feishu | `feishu/doc` | Feishu doc full text |
 
-### Write
+### Write & Publish
 
-| Site | Skill |
-|------|-------|
-| Xiaohongshu | `xiaohongshu/publish` |
-| Zhihu | `zhihu/publish` |
-| Bilibili | `bilibili/upload` |
-| Dev.to | `devto/publish` |
+| Site | Skill | Description |
+|------|-------|-------------|
+| X / Twitter | `x/post` | Post a tweet |
+| Xiaohongshu | `xiaohongshu/publish` | Publish image-text note |
+| Xiaohongshu | `xiaohongshu/publish_text` | Publish text-only note |
+| Weibo | `weibo/post` | Publish a post |
+| Zhihu | `zhihu/publish` | Publish article |
+| Zhihu | `zhihu/answer` | Write an answer |
+| Bilibili | `bilibili/upload` | Upload video |
+| Dev.to | `devto/publish` | Publish article |
+| Medium | `medium/publish` | Publish article |
+| Telegraph | `telegraph/publish` | Publish anonymous article |
+| V2EX | `v2ex/post` | Post a topic |
+| Reddit | `reddit/post` | Submit a post |
+| LinkedIn | `linkedin/post` | Post content |
 
-## Writing a Skill
+### Interact
 
-A skill is one `.tap.js` file:
+| Site | Skill | Description |
+|------|-------|-------------|
+| Xiaohongshu | `xiaohongshu/comment` | Comment on note |
+| Xiaohongshu | `xiaohongshu/like` | Like a note |
+| Xiaohongshu | `xiaohongshu/follow` | Follow author |
+| Xiaohongshu | `xiaohongshu/reply` | Reply to comments |
+| Bilibili | `bilibili/comment` | Comment on video |
+| Bilibili | `bilibili/reply` | Reply to comment |
+| Weibo | `weibo/comment` | Comment on post |
+| Zhihu | `zhihu/comment` | Comment on answer |
+| Douyin | `douyin/comment` | Comment on video |
+| Douyin | `douyin/reply` | Reply to comment |
+| Reddit | `reddit/comment` | Comment on post |
+| Discord | `discord/send` | Send message |
+| Slack | `slack/send` | Send message |
 
-```js
-export default {
-  site: "example",
-  name: "trending",
-  description: "Trending on Example.com",
-  url: "https://example.com/trending",
-  health: { min_rows: 3, non_empty: ["title"] },
+### Navigate & Open
 
-  extract: () => Array.from(document.querySelectorAll('.item')).map(el => ({
-    title: el.querySelector('h2')?.textContent?.trim() || '',
-    url: el.querySelector('a')?.href || ''
-  }))
-}
-```
+| Site | Skill | Description |
+|------|-------|-------------|
+| Xiaohongshu | `xiaohongshu/open` | Search → open note |
+| Bilibili | `bilibili/open` | Open video |
+| Weibo | `weibo/open` | Open post |
+| Zhihu | `zhihu/open` | Open question |
+| Douyin | `douyin/open` | Open video |
+| WeChat | `wechat/open` | Open article |
 
-Rules:
-- **`site` = directory name, `name` = filename.** `github/trending.tap.js` → `site: "github", name: "trending"`
-- **Include a health contract** — `min_rows` and `non_empty` catch failures early
-- **All values must be strings** — use `String(val ?? "")` for null safety
+### Creator Tools
+
+| Site | Skill | Description |
+|------|-------|-------------|
+| Xiaohongshu | `xiaohongshu/profile` | Creator center data |
+| Xiaohongshu | `xiaohongshu/my_notes` | Published notes + stats |
+| Xiaohongshu | `xiaohongshu/notifications` | Followers, comments, likes |
+| GitHub | `github/issues` | Repository issues |
+| GitHub | `github/create-issue` | Create an issue |
+
+### Packages & Dev
+
+| Site | Skill | Description |
+|------|-------|-------------|
+| npm | `npmjs/popular` | Most popular packages |
+| PyPI | `pypi/top` | Top Python packages |
+| Crates.io | `crates/popular` | Popular Rust packages |
+| Pixiv | `pixiv/ranking` | Daily illustration ranking |
+
+### macOS Native
+
+| App | Skill | Description |
+|-----|-------|-------------|
+| Calendar | `calendar/today` | Today's events |
+| Reminders | `reminders/pending` | Incomplete reminders |
+| Notes | `notes/create` | Create a note |
+| Shortcuts | `shortcuts/list` | List shortcuts |
+| Shortcuts | `shortcuts/run` | Run a shortcut |
+| Weather | `weather/forecast` | Weather forecast |
+
+### Utilities
+
+| Name | Skill | Description |
+|------|-------|-------------|
+| Daily Brief | `daily/brief` | Calendar + Reminders summary |
+| Filter | `tap/filter` | Filter rows by condition |
+| Sort | `tap/sort` | Sort rows by field |
+| Limit | `tap/limit` | Take first N rows |
+| Pick | `tap/pick` | Select specific columns |
+| Dedupe | `tap/dedupe` | Remove duplicate rows |
 
 ## Contributing
 
 ```bash
-# 1. Fork and clone
 git clone https://github.com/<you>/tap-skills && cd tap-skills
-
-# 2. Create your skill
 mkdir -p mysite && vi mysite/hot.tap.js
-
-# 3. Test it
-tap mysite hot
-
-# 4. Submit PR
+tap mysite hot   # Test it
+# Submit PR
 ```
 
-Every contribution is welcome — from fixing a broken selector to adding a new site.
-
-## Priority
-
-User taps (`~/.tap/taps/`) override community skills. Customize a skill for personal use by saving to `~/.tap/taps/site/name.tap.js`.
+Every contribution is welcome — from fixing a selector to adding a new site.
 
 ## License
 
