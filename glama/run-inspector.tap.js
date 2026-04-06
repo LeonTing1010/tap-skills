@@ -2,6 +2,7 @@ export default {
   site: "glama",
   name: "run-inspector",
   description: "Open Glama MCP Inspector and execute tools to generate usage data",
+  columns: ["tool", "status"],
   args: {
     owner: { type: "string", description: "GitHub owner" },
     repo: { type: "string", description: "GitHub repo name" },

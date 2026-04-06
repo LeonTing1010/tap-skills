@@ -2,6 +2,7 @@ export default {
   site: "glama",
   name: "build-release",
   description: "Trigger a Glama Dockerfile build & release for an MCP server",
+  columns: ["config", "result"],
   args: {
     owner: { type: "string", description: "GitHub owner" },
     repo: { type: "string", description: "GitHub repo name" }

@@ -2,6 +2,7 @@ export default {
   site: "glama",
   name: "add-related",
   description: "Search and add related servers to a Glama MCP server listing",
+  columns: ["query", "results", "added", "toast"],
   args: {
     owner: { type: "string", description: "GitHub owner" },
     repo: { type: "string", description: "GitHub repo name" },

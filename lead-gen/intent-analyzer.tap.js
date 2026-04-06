@@ -2,7 +2,8 @@ export default {
   site: "lead-gen",
   name: "intent-analyzer",
   description: "Analyze text for purchase intent - 5 phrase detection",
-  
+  url: "https://www.reddit.com/",
+
   args: {
     text: { type: "string", desc: "Text to analyze" }
   },

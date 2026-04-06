@@ -2,6 +2,7 @@ export default {
   site: "weather",
   name: "forecast",
   description: "Weather forecast from wttr.in (defaults to auto-detected location)",
+  columns: ["day", "location", "temp_c", "temp_f", "feels_like_c", "condition", "humidity", "wind_kph", "wind_dir", "precip_mm", "uv_index"],
   url: "https://wttr.in/",
   args: {
     location: { type: "string", default: "", description: "City name or location (e.g. 'London', 'New+York')" }

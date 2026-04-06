@@ -2,6 +2,7 @@ export default {
   site: "glama",
   name: "update-config",
   description: "Update Glama Dockerfile config — build steps, CMD, env schema. Uses CodeMirror execCommand.",
+  columns: ["before", "updated"],
   args: {
     owner: { type: "string", description: "GitHub owner (default: LeonTing1010)" },
     repo: { type: "string", description: "GitHub repo name (default: tap)" },
