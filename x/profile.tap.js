@@ -9,7 +9,6 @@ export default {
   waitFor: "article",
   timeout: 15000,
   health: { min_rows: 1, non_empty: ["text"] },
-  columns: ["text", "replies", "reposts", "likes", "views", "time", "url"],
   extract: () => {
     const seen = new Set()
     return Array.from(document.querySelectorAll('article')).map(el => {

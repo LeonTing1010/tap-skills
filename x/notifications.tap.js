@@ -6,7 +6,6 @@ export default {
   waitFor: "article",
   timeout: 15000,
   health: { min_rows: 1, non_empty: ["text"] },
-  columns: ["type", "user", "handle", "text", "time"],
   extract: () => {
     const seen = new Set()
     return Array.from(document.querySelectorAll('article, [data-testid="cellInnerDiv"]')).map(el => {
