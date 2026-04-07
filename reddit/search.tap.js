@@ -1,12 +1,17 @@
 export default {
   site: "reddit",
   name: "search",
+  intent: "read",
   description: "Search Reddit posts",
   url: "https://www.reddit.com/",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     const params = new URLSearchParams({
       q: args.keyword,
       limit: '30',
@@ -26,5 +31,7 @@ export default {
       comments: String(child.data.num_comments || 0),
       url: 'https://reddit.com' + child.data.permalink
     }))
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

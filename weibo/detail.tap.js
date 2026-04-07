@@ -1,12 +1,13 @@
 export default {
   site: "weibo",
   name: "detail",
+  intent: "read",
   description: "Read current Weibo post details and comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(tap) {
+  async tap(tap) {
     // Extract mid from current URL
     const mid = await tap.eval(() => {
       const url = location.href

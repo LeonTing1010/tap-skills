@@ -1,6 +1,7 @@
 export default {
   site: "glama",
   name: "update-config",
+  intent: "write",
   description: "Update Glama Dockerfile config — build steps, CMD, env schema. Uses CodeMirror execCommand.",
   columns: ["before", "updated"],
   args: {
@@ -10,7 +11,7 @@ export default {
     cmd: { type: "string", description: "JSON array of CMD arguments" },
     envSchema: { type: "string", description: "JSON schema for environment variables" },
   },
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const owner = args.owner || "LeonTing1010";
     const repo = args.repo || "tap";
 

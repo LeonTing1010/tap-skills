@@ -1,6 +1,7 @@
 export default {
   site: "reddit",
   name: "post",
+  intent: "write",
   description: "Submit a post to Reddit",
   columns: ["status", "url"],
   args: {
@@ -10,7 +11,7 @@ export default {
     link: { type: "string", optional: true }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.subreddit) {
       return [{ status: "error", url: "missing title or subreddit" }]
     }

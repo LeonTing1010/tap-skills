@@ -1,6 +1,7 @@
 export default {
   site: "lead-gen",
   name: "old-thread-finder",
+  intent: "read",
   description: "发现3-4月旧帖但仍在Google活跃的Reddit帖子",
   columns: ["title", "age_days", "comments", "score", "url"],
 
@@ -10,7 +11,7 @@ export default {
     maxResults: { type: "string", description: "最大结果数" }
   },
 
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const keywords = args.keywords || "";
     const subreddit = args.subreddit || "saas";
     const maxResults = parseInt(args.maxResults) || 20;

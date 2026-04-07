@@ -1,6 +1,7 @@
 export default {
   site: "bilibili",
   name: "open",
+  intent: "read",
   description: "Open Bilibili video by bvid or search Nth result",
   columns: ["bvid", "title", "author", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     index: { type: "int", default: 1 }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     let bvid = args.bvid
 
     if (!bvid && args.keyword) {

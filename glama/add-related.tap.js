@@ -1,6 +1,7 @@
 export default {
   site: "glama",
   name: "add-related",
+  intent: "write",
   description: "Search and add related servers to a Glama MCP server listing",
   columns: ["query", "results", "added", "toast"],
   args: {
@@ -8,7 +9,7 @@ export default {
     repo: { type: "string", description: "GitHub repo name" },
     query: { type: "string", description: "Search query for related servers (e.g. 'playwright', 'puppeteer')" }
   },
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const owner = args.owner || "LeonTing1010";
     const repo = args.repo || "tap";
     const query = args.query;

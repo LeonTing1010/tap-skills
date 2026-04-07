@@ -1,12 +1,13 @@
 export default {
   site: "x",
   name: "opportunities",
+  intent: "read",
   description: "Find X conversations to engage with — search multiple keywords and return recent posts worth replying to",
   args: [
     { name: "keywords", type: "string", description: "Comma-separated keywords (default: browser automation, MCP, web scraping)", default: "browser automation agent,MCP server tool,web scraping broken,AI agent cost" }
   ],
   columns: ["keyword", "author", "handle", "text", "time", "url"],
-  async run(tap, args) {
+  async tap(tap, args) {
     const keywords = (args.keywords || "browser automation agent,MCP server tool,web scraping broken").split(",").map(k => k.trim())
     const results = []
     

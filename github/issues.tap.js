@@ -1,12 +1,17 @@
 export default {
   site: "github",
   name: "issues",
+  intent: "read",
   description: "GitHub issues for a repository",
   url: "https://github.com",
   args: { repo: { type: "string" } },
   health: { min_rows: 1, non_empty: ["title"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     const res = await fetch(
       'https://api.github.com/repos/' + args.repo + '/issues?per_page=30&state=open&sort=updated',
       { headers: { 'Accept': 'application/vnd.github.v3+json' } }
@@ -27,5 +32,7 @@ export default {
         updated: item.updated_at?.split('T')[0] || '',
         url: item.html_url
       }))
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

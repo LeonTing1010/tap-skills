@@ -1,11 +1,12 @@
 export default {
   site: "xiaohongshu",
   name: "profile",
+  intent: "read",
   description: "Read Xiaohongshu creator center account data",
   columns: ["followers", "following", "likes_collects", "views", "likes", "comments", "collects", "shares"],
   health: { min_rows: 1, non_empty: ["followers"] },
 
-  async run(tap) {
+  async tap(tap) {
     await tap.nav("https://creator.xiaohongshu.com/new/home")
     await tap.wait(4000)
 

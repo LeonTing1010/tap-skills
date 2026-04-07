@@ -7,6 +7,7 @@
 export default {
   site: "wechat",
   name: "app-search",
+  intent: "read",
   runtime: "macos",
   app: "WeChat",
   description: "Search inside WeChat macOS app (contacts, chats, articles)",
@@ -15,7 +16,7 @@ export default {
     query: { type: "string", required: true, description: "Search query" },
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const query = args.query;
 
     // Single eval: activate → search → wait → extract → cleanup. Zero focus switching.

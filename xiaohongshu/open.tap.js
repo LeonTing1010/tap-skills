@@ -1,6 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "open",
+  intent: "write",
   description: "Search and open Nth Xiaohongshu note detail",
   columns: ["note_id", "title", "author", "url"],
   args: {
@@ -8,7 +9,7 @@ export default {
     index: { type: "int", default: 1 }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     await tap.nav(`https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(args.keyword)}&type=51`)
     await tap.waitFor("section.note-item", 10000)
     await tap.wait(2000)

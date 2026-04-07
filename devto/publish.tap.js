@@ -1,6 +1,7 @@
 export default {
   site: "devto",
   name: "publish",
+  intent: "write",
   description: "Publish an article on Dev.to",
   columns: ["status", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     tags: { type: "string", description: "Comma-separated tags, up to 4 (optional)" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.content) {
       return [{ status: "error", url: "missing title or content" }]
     }

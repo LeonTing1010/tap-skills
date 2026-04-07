@@ -1,12 +1,17 @@
 export default {
   site: "xiaohongshu",
   name: "search",
+  intent: "read",
   description: "Search Xiaohongshu posts with comments, favorites (SSR)",
   url: "https://www.xiaohongshu.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     const searchUrl = `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(args.keyword)}&type=51`
     const res = await fetch(searchUrl, { credentials: 'include' })
     const html = await res.text()
@@ -54,5 +59,7 @@ export default {
         note_id: href ? href.split('/').pop()?.split('?')[0] || '' : ''
       }
     }).filter(item => item.title.length > 0)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

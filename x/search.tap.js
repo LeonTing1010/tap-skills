@@ -1,12 +1,17 @@
 export default {
   site: "x",
   name: "search",
+  intent: "read",
   description: "Search X/Twitter posts",
   url: "https://x.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["text"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     // Navigate to search results
     location.href = 'https://x.com/search?q=' + encodeURIComponent(args.keyword) + '&src=typed_query&f=top'
 
@@ -54,5 +59,7 @@ export default {
 
       return { author, handle, text: text.substring(0, 200), time, url }
     }).filter(item => item.text.length > 0)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

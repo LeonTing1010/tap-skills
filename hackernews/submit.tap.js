@@ -1,6 +1,7 @@
 export default {
   site: "hackernews",
   name: "submit",
+  intent: "write",
   description: "Submit a story to Hacker News",
   columns: ["status", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     text: { type: "string", description: "Text body for Ask HN / Show HN (optional if link provided)" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title) {
       return [{ status: "error", url: "missing title" }]
     }

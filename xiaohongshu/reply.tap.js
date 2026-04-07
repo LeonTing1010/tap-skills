@@ -1,6 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "reply",
+  intent: "write",
   description: "Reply to comments on my Xiaohongshu notes",
   columns: ["status"],
   args: {
@@ -9,7 +10,7 @@ export default {
     text: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.text) {
       return [{ status: "error: missing text arg" }]
     }

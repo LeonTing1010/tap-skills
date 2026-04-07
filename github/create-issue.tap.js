@@ -1,6 +1,7 @@
 export default {
   site: "github",
   name: "create-issue",
+  intent: "write",
   description: "Create a GitHub issue via API",
   columns: ["status", "url"],
   args: {
@@ -10,7 +11,7 @@ export default {
     labels: { type: "string", default: "" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.repo || !args.title) {
       return [{ status: "error", url: "missing repo or title" }]
     }

@@ -1,11 +1,12 @@
 export default {
   site: "telegraph",
   name: "nav",
+  intent: "read",
   description: "Navigate to Telegraph editor and activate",
   columns: ["status", "url"],
   args: {},
 
-  async run(tap) {
+  async tap(tap) {
     await tap.nav("https://telegra.ph")
     await tap.wait(2000)
 

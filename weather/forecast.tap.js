@@ -1,6 +1,7 @@
 export default {
   site: "weather",
   name: "forecast",
+  intent: "read",
   description: "Weather forecast from wttr.in (defaults to auto-detected location)",
   columns: ["day", "location", "temp_c", "temp_f", "feels_like_c", "condition", "humidity", "wind_kph", "wind_dir", "precip_mm", "uv_index"],
   url: "https://wttr.in/",
@@ -8,7 +9,7 @@ export default {
     location: { type: "string", default: "", description: "City name or location (e.g. 'London', 'New+York')" }
   },
 
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const location = args.location || ''
     const url = `https://wttr.in/${encodeURIComponent(location)}?format=j1`
     const resp = await tap.fetch(url, { headers: { 'User-Agent': 'curl/8.0' } })

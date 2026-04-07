@@ -1,12 +1,17 @@
 export default {
   site: "hackernews",
   name: "hot",
+  intent: "read",
   description: "Hacker News top stories",
   url: "https://news.ycombinator.com/",
   waitFor: ".athing",
   health: { min_rows: 10, non_empty: ["title", "score"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     document.querySelectorAll('.athing').forEach((row) => {
       const rank = (row.querySelector('.rank') || {}).textContent || ''
@@ -31,5 +36,7 @@ export default {
       }
     })
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

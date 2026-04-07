@@ -1,6 +1,7 @@
 export default {
   site: "clawhub",
   name: "publish",
+  intent: "write",
   description: "Publish a skill to OpenClaw ClawHub",
   columns: ["status", "url"],
   args: {
@@ -11,7 +12,7 @@ export default {
     changelog: { type: "string", description: "Changelog text" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.slug || !args.skillFile) throw new Error('slug and skillFile are required')
 
     await tap.nav('https://clawhub.ai/publish-skill')

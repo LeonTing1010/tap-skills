@@ -1,6 +1,7 @@
 export default {
   site: "lead-gen",
   name: "intent-analyzer",
+  intent: "read",
   description: "Analyze text for purchase intent - 5 phrase detection",
   url: "https://www.reddit.com/",
 
@@ -9,7 +10,11 @@ export default {
   },
   health: { min_rows: 1, non_empty: ["intent"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const text = args.text || ""
     const patterns = [
       { pattern: /手动做了\d+(天|周|月|年)|doing this manually for|I have been doing this manually/, label: "手动做了X时间", score: 5 },
@@ -39,5 +44,7 @@ export default {
       score,
       matched_phrases: matched.join(", ")
     }]
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

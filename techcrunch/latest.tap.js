@@ -1,13 +1,18 @@
 export default {
   site: "techcrunch",
   name: "latest",
+  intent: "read",
   description: "TechCrunch latest articles",
   url: "https://techcrunch.com/",
   waitFor: "article, .post-block, [class*='post-card']",
   timeout: 15000,
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const seen = new Set()
 
@@ -66,5 +71,7 @@ export default {
     }
 
     return items.slice(0, 25)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

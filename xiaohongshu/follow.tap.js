@@ -1,11 +1,12 @@
 export default {
   site: "xiaohongshu",
   name: "follow",
+  intent: "write",
   description: "Follow the author of current note",
   columns: ["status", "user"],
   args: {},
 
-  async run(tap) {
+  async tap(tap) {
     // Extract author name and follow state from SSR state
     const info = await tap.eval(() => {
       const map = window.__INITIAL_STATE__?.note?.noteDetailMap || {}

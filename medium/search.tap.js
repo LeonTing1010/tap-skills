@@ -1,12 +1,17 @@
 export default {
   site: "medium",
   name: "search",
+  intent: "read",
   description: "Search Medium articles",
   url: "https://medium.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     // Medium uses a GraphQL-based search via tag/search pages
     const searchUrl = 'https://medium.com/search?q=' + encodeURIComponent(args.keyword)
     location.href = searchUrl
@@ -50,5 +55,7 @@ export default {
         url
       }
     }).filter(item => item.title.length > 0)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

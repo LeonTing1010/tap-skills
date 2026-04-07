@@ -1,13 +1,14 @@
 export default {
   site: "linkedin",
   name: "post",
+  intent: "write",
   description: "Post to LinkedIn feed",
   columns: ["status", "url"],
   args: {
     content: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.content) {
       return [{ status: "error", url: "missing content arg" }]
     }

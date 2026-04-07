@@ -1,11 +1,12 @@
 export default {
   site: "cloudflare",
   name: "security-audit",
+  intent: "read",
   description: "Audit Cloudflare security settings — SSL mode, HSTS, TLS, bot protection",
   url: "https://dash.cloudflare.com",
   columns: ["setting", "value", "status"],
   health: { min_rows: 6, non_empty: ["setting", "value"] },
-  run: async (tap) => {
+  tap: async (tap) => {
     // ── 1. SSL/TLS Overview ──
     await tap.nav("https://dash.cloudflare.com/?to=/:account/taprun.dev/ssl-tls");
     await tap.wait(5000);

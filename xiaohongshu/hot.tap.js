@@ -1,12 +1,13 @@
 export default {
   site: "xiaohongshu",
   name: "hot",
+  intent: "write",
   description: "Xiaohongshu hot search topics",
   columns: ["rank", "title", "hot"],
   args: { limit: { type: "int", default: 20 } },
   health: { min_rows: 5, non_empty: ["title"] },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     await tap.nav("https://www.xiaohongshu.com/explore")
     await tap.wait(4000)
 

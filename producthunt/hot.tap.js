@@ -1,13 +1,18 @@
 export default {
   site: "producthunt",
   name: "hot",
+  intent: "read",
   description: "Product Hunt today's hot products",
   url: "https://www.producthunt.com/",
   waitFor: '[data-test="post-item"], [class*="post-item"], main section',
   timeout: 10000,
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const products = document.querySelectorAll('[data-test="post-item"], .styles_item__Dk_nz, [class*="post-item"], main section > div > div')
     products.forEach((el, i) => {
@@ -32,5 +37,7 @@ export default {
       })
     }
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

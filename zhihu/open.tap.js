@@ -1,6 +1,7 @@
 export default {
   site: "zhihu",
   name: "open",
+  intent: "read",
   description: "Search and open Nth Zhihu question",
   columns: ["qid", "title", "author", "url"],
   args: {
@@ -8,7 +9,7 @@ export default {
     index: { type: "int", default: 1 }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     // Compose: use search tap to get results
     const results = await tap.run("zhihu", "search", { keyword: args.keyword })
     const idx = (args.index || 1) - 1

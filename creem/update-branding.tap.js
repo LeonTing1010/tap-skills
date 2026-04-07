@@ -1,6 +1,7 @@
 export default {
   site: "creem",
   name: "update-branding",
+  intent: "write",
   description: "Update Creem store checkout branding — theme, accent colors, and logo",
   columns: ["success", "theme", "accent", "accentHover", "textColor"],
   args: {
@@ -12,7 +13,7 @@ export default {
   },
   examples: [{ theme: "dark", accent: "#d97706", accentHover: "#b45309", textColor: "#ffffff" }],
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const { theme, accent, accentHover, textColor, logoPath } = args
 
     await tap.nav("https://www.creem.io/dashboard/settings/branding")

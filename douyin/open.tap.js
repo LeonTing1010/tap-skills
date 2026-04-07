@@ -1,6 +1,7 @@
 export default {
   site: "douyin",
   name: "open",
+  intent: "read",
   description: "Search and open Douyin video, or open by aweme_id",
   columns: ["aweme_id", "title", "author", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     aweme_id: { type: "string", default: "" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (args.aweme_id) {
       const url = `https://www.douyin.com/video/${args.aweme_id}`
       await tap.nav(url)

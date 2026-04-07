@@ -11,13 +11,14 @@
 export default {
   site: "wechat",
   name: "articles",
+  intent: "read",
   description: "Read WeChat Official Account articles",
   columns: ["title", "source", "content"],
   args: {
     count: { type: "string", default: "3", description: "Number of articles to read" },
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const maxArticles = parseInt(args.count) || 3;
 
     // Helper: get window state

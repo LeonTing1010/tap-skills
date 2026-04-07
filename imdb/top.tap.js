@@ -1,13 +1,18 @@
 export default {
   site: "imdb",
   name: "top",
+  intent: "read",
   description: "IMDB Top 250 rated movies",
   url: "https://www.imdb.com/chart/top/",
   waitFor: ".ipc-metadata-list-summary-item, .cli-children",
   timeout: 15000,
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
 
     // Strategy 1: modern IMDB layout (2024+) using list items
@@ -68,5 +73,7 @@ export default {
     }
 
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

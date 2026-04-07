@@ -1,12 +1,13 @@
 export default {
   site: "xiaohongshu",
   name: "detail",
+  intent: "read",
   description: "Read current Xiaohongshu note details and comments (SSR)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(tap) {
+  async tap(tap) {
     const items = await tap.eval(() => {
       const results = []
       let noteMap

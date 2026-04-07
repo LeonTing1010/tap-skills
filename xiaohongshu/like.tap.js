@@ -1,11 +1,12 @@
 export default {
   site: "xiaohongshu",
   name: "like",
+  intent: "write",
   description: "Like current Xiaohongshu note",
   columns: ["status"],
   args: {},
 
-  async run(tap) {
+  async tap(tap) {
     // Check if already liked via SSR state
     const already = await tap.eval(() => {
       const map = window.__INITIAL_STATE__?.note?.noteDetailMap || {}

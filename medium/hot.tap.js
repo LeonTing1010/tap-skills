@@ -1,11 +1,16 @@
 export default {
   site: "medium",
   name: "hot",
+  intent: "read",
   description: "Medium Trending articles",
   url: "https://medium.com/tag/trending",
   health: { min_rows: 3, non_empty: ["title"] },
 
-  extract: async () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     // Wait for articles to load
     await new Promise(resolve => {
       let attempts = 0
@@ -43,5 +48,7 @@ export default {
         url
       }
     }).filter(item => item.title.length > 0)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

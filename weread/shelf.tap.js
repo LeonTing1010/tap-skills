@@ -1,11 +1,16 @@
 export default {
   site: "weread",
   name: "shelf",
+  intent: "read",
   description: "WeRead bookshelf (login required)",
   url: "https://weread.qq.com/web/shelf",
   health: { min_rows: 1, non_empty: ["title"] },
 
-  extract: async () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     try {
       const res = await fetch(
         'https://weread.qq.com/api/shelf/sync',
@@ -49,5 +54,7 @@ export default {
         url
       }
     }).filter(item => item.title.length > 0)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

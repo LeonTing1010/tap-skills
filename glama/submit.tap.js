@@ -1,6 +1,7 @@
 export default {
   site: "glama",
   name: "submit",
+  intent: "write",
   description: "Submit an MCP server to Glama directory",
   columns: ["status", "url"],
   args: {
@@ -8,7 +9,7 @@ export default {
     repoUrl: { type: "string", description: "GitHub repository URL" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.repoUrl) throw new Error('repoUrl is required')
 
     await tap.nav('https://glama.ai/mcp/servers')

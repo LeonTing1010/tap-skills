@@ -1,11 +1,16 @@
 export default {
   site: "github",
   name: "stars",
+  intent: "read",
   description: "GitHub starred repositories (requires login)",
   url: "https://github.com/stars",
   health: { min_rows: 1, non_empty: ["repo"] },
 
-  extract: async () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     // Use GitHub API with credentials from browser session
     const res = await fetch(
       'https://api.github.com/user/starred?per_page=30&sort=created',
@@ -30,5 +35,7 @@ export default {
       stars: String(item.stargazers_count || 0),
       language: item.language || ''
     }))
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

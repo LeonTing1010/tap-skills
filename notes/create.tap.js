@@ -5,6 +5,7 @@
 export default {
   site: "notes",
   name: "create",
+  intent: "write",
   description: "Create a note in Apple Notes",
   columns: ["id", "name", "folder"],
   args: {
@@ -13,7 +14,7 @@ export default {
     folder: { type: "string", default: "Notes", description: "Target folder" },
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const result = await tap.eval(`
       var app = Application("Notes");
       var title = ${JSON.stringify(args.title)};

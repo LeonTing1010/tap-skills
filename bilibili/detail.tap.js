@@ -1,12 +1,13 @@
 export default {
   site: "bilibili",
   name: "detail",
+  intent: "read",
   description: "Read current Bilibili video details and comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(tap) {
+  async tap(tap) {
     const info = await tap.eval(() => {
       const bvMatch = location.pathname.match(/BV\w+/)
       return { bvid: bvMatch ? bvMatch[0] : '' }

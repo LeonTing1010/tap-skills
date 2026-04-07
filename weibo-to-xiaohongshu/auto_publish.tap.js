@@ -1,13 +1,14 @@
 export default {
   site: "weibo-to-xiaohongshu",
   name: "auto_publish",
+  intent: "write",
   description: "Auto-publish Weibo trending to Xiaohongshu note",
   columns: ["status", "topic", "note_url"],
   args: {
     hot_index: { type: "int", default: 1, description: "Pick Nth Weibo trending topic" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const hotIndex = args.hot_index || 1
     
     // Step 1: 获取微博热搜

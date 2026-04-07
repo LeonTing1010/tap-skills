@@ -1,13 +1,18 @@
 export default {
   site: "espn",
   name: "scores",
+  intent: "read",
   description: "ESPN top headlines and scores",
   url: "https://www.espn.com/",
   waitFor: "a[href*='espn.com']",
   timeout: 15000,
   health: { min_rows: 5, non_empty: ["headline"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const seen = new Set()
 
@@ -65,5 +70,7 @@ export default {
     }
 
     return items.slice(0, 30)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

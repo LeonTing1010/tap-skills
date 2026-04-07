@@ -1,6 +1,7 @@
 export default {
   site: "x",
   name: "profile",
+  intent: "read",
   description: "Get posts from an X/Twitter profile with engagement stats",
   url: (args) => `https://x.com/${(args.username || '').replace('@', '')}`,
   args: [
@@ -9,7 +10,11 @@ export default {
   waitFor: "article",
   timeout: 15000,
   health: { min_rows: 1, non_empty: ["text"] },
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const seen = new Set()
     return Array.from(document.querySelectorAll('article')).map(el => {
       const textEl = el.querySelector('[data-testid="tweetText"]')
@@ -41,5 +46,7 @@ export default {
         url
       }
     }).filter(Boolean)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

@@ -1,12 +1,13 @@
 export default {
   site: "wechat",
   name: "detail",
+  intent: "read",
   description: "Read current WeChat article (title, body, author, date)",
   columns: ["type", "content", "author", "date"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(tap) {
+  async tap(tap) {
     const items = await tap.eval(() => {
       const results = []
 

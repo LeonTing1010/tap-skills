@@ -27,6 +27,7 @@ function analyzeIntent(text) {
 export default {
   site: "lead-gen",
   name: "subreddit-monitor",
+  intent: "read",
   description: "监控subreddit上的高意图帖子并实时提醒",
   columns: ["source", "title", "score", "comments", "intent", "matched_phrases"],
 
@@ -37,7 +38,7 @@ export default {
     minComments: { type: "string", description: "最低评论数" }
   },
 
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const subreddits = args.subreddits ? args.subreddits.split(",").map(s => s.trim()) : ["saas", "startups", "entrepreneur"];
     const minScore = parseInt(args.minScore) || 5;
     const minComments = parseInt(args.minComments) || 3;

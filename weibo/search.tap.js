@@ -1,12 +1,17 @@
 export default {
   site: "weibo",
   name: "search",
+  intent: "read",
   description: "Search Weibo posts with title, engagement, author",
   url: "https://weibo.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     try {
       const encoded = encodeURIComponent(args.keyword)
       const containerid = '100103type=1&q=' + encoded
@@ -49,5 +54,7 @@ export default {
     } catch (e) {
       return [{ title: 'Error: ' + e.message, likes: '0', author: '', url: '' }]
     }
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

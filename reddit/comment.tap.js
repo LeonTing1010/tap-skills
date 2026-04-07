@@ -1,6 +1,7 @@
 export default {
   site: "reddit",
   name: "comment",
+  intent: "write",
   description: "Post a comment on Reddit (requires login)",
   columns: ["status", "url"],
   args: {
@@ -8,7 +9,7 @@ export default {
     content: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.post_url || !args.content) {
       return [{ status: "error", url: "missing post_url or content" }]
     }

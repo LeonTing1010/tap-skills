@@ -1,13 +1,18 @@
 export default {
   site: "rottentomatoes",
   name: "opening",
+  intent: "read",
   description: "Rotten Tomatoes popular movies at home",
   url: "https://www.rottentomatoes.com/browse/movies_at_home/sort:popular",
   waitFor: "a[href*='/m/'], [data-qa='discovery-media-list-item']",
   timeout: 15000,
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const seen = new Set()
 
@@ -74,5 +79,7 @@ export default {
     }
 
     return items.slice(0, 30)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

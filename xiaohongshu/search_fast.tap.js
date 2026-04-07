@@ -1,12 +1,17 @@
 export default {
   site: "xiaohongshu",
   name: "search_fast",
+  intent: "read",
   description: "HTTP-only Xiaohongshu search (SSR state extraction)",
   url: "https://www.xiaohongshu.com",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     const url = `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(args.keyword)}&type=51`
     const res = await fetch(url, {
       method: 'GET',
@@ -86,5 +91,7 @@ export default {
         note_id: String(item.id || '')
       }
     })
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

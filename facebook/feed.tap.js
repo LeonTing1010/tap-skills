@@ -1,11 +1,16 @@
 export default {
   site: "facebook",
   name: "feed",
+  intent: "read",
   description: "Facebook News Feed",
   url: "https://www.facebook.com/",
   health: { min_rows: 3, non_empty: ["author"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const articles = document.querySelectorAll('[role="article"]')
     articles.forEach((el, i) => {
@@ -29,5 +34,7 @@ export default {
       }
     })
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

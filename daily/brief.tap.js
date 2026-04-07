@@ -13,13 +13,14 @@
 export default {
   site: "daily",
   name: "brief",
+  intent: "read",
   description: "Daily briefing from Calendar + Reminders",
   columns: ["type", "title", "detail", "source"],
   args: {
     save: { type: "string", default: "false", description: "Save to Apple Notes" },
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const rows = [];
 
     // --- Calendar events (composition: page.tap) ---

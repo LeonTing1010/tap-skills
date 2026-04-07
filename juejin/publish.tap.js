@@ -1,6 +1,7 @@
 export default {
   site: "juejin",
   name: "publish",
+  intent: "write",
   description: "Publish article on Juejin (API)",
   columns: ["status", "url"],
   args: {
@@ -11,7 +12,7 @@ export default {
     brief: { type: "string", description: "Summary (optional, max 100 chars)" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.content) {
       return [{ status: "error", url: "缺少 title 或 content 参数" }]
     }
