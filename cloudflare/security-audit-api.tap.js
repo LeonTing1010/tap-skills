@@ -6,7 +6,7 @@ export default {
   columns: ["setting", "value", "status"],
   health: { min_rows: 8, non_empty: ["setting", "value"] },
   args: {
-    zone_id: { type: "string", description: "Cloudflare Zone ID", default: "2ceb4cb30909d3ea19de85c71cdcd395" },
+    zone_id: { type: "string", description: "Cloudflare Zone ID (find at dash.cloudflare.com → your domain → Overview, right sidebar)" },
     token: { type: "string", description: "Cloudflare API Token (Zone Settings:Read)" }
   },
   run: async (tap, args) => {
