@@ -1,0 +1,23 @@
+{
+  "name": "tap-skills",
+  "owner": {
+    "name": "LeonTing1010",
+    "email": "noreply@taprun.dev"
+  },
+  "metadata": {
+    "description": "200+ deterministic web automation skills powered by Tap. Run via npx — zero install, zero per-run AI cost.",
+    "version": "0.9.0"
+  },
+  "plugins": [
+    {
+      "name": "tap-runner",
+      "description": "Curated set of stable Tap skills. Each skill is a one-line npx command that runs a deterministic .tap.js program — no LLM interpretation at execution.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/github-trending",
+        "./skills/arxiv-search"
+      ]
+    }
+  ]
+}
