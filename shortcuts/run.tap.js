@@ -11,6 +11,7 @@
 export default {
   site: "shortcuts",
   name: "run",
+  intent: "read",
   description: "Run an Apple Shortcut",
   columns: ["output"],
   args: {
@@ -18,7 +19,7 @@ export default {
     input: { type: "string", default: "", description: "Input text (optional)" },
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     // Use tap.eval to call shortcuts CLI via JXA doShellScript.
     // Shell args are single-quoted with internal quotes escaped to prevent injection.
     const esc = (s) => "'" + String(s).replace(/'/g, "'\\''") + "'";

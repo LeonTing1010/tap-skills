@@ -1,13 +1,14 @@
 export default {
   site: "x",
   name: "post",
+  intent: "write",
   description: "Post a tweet on X/Twitter",
   columns: ["status", "url"],
   args: {
     content: { type: "string", description: "Tweet text (max 280 chars)" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.content) throw new Error('content is required')
 
     // Use Home inline editor (compose dialog is fragile — DOM.focus dismisses it)

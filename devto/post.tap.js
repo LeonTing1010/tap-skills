@@ -1,6 +1,7 @@
 export default {
   site: "devto",
   name: "post",
+  intent: "write",
   description: "Publish an article on Dev.to",
   columns: ["status", "url"],
   args: {
@@ -10,7 +11,7 @@ export default {
     published: { type: "boolean", description: "Publish immediately (default: true)" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.body) throw new Error('title and body are required')
 
     await tap.nav('https://dev.to/new')

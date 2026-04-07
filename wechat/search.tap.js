@@ -1,6 +1,7 @@
 export default {
   site: "wechat",
   name: "search",
+  intent: "read",
   description: "Search WeChat articles via Sogou search",
   columns: ["title", "author", "description", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
   },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const keyword = encodeURIComponent(args.keyword)
     await tap.nav(`https://weixin.sogou.com/weixin?type=2&query=${keyword}`)
     await tap.waitFor(".news-list li, .news-box li, .txt-box", 10000)

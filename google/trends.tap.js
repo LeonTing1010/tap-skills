@@ -1,6 +1,7 @@
 export default {
   site: "google",
   name: "trends",
+  intent: "read",
   description: "Google Trends trending searches",
   url: (args) => `https://trends.google.com/trending?geo=${args.geo || 'US'}`,
   args: {
@@ -8,7 +9,11 @@ export default {
   },
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const rows = document.querySelectorAll('[jsname] .mZ3RIc, tr[jsaction], .feed-item, [data-hveid]')
     if (rows.length > 0) {
@@ -33,5 +38,7 @@ export default {
       })
     }
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

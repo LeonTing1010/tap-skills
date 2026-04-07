@@ -1,12 +1,13 @@
 export default {
   site: "feishu",
   name: "doc",
+  intent: "read",
   description: "Read current Feishu doc full text (block_map + TOC fallback)",
   columns: ["type", "content", "level"],
   args: {},
   health: { min_rows: 5, non_empty: ["content"] },
 
-  async run(tap) {
+  async tap(tap) {
     const items = await tap.eval(async () => {
       // Step 1: 从 block_map 直接提取已加载的块（最优雅路径）
       const blockMap = window.DATA?.clientVars?.data?.block_map || {}

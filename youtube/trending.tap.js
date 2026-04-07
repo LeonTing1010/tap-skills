@@ -1,11 +1,16 @@
 export default {
   site: "youtube",
   name: "trending",
+  intent: "read",
   description: "YouTube Trending Videos",
   url: "https://www.youtube.com/feed/trending",
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const videos = document.querySelectorAll('ytd-video-renderer, ytd-rich-item-renderer')
     videos.forEach((el, i) => {
@@ -27,5 +32,7 @@ export default {
       })
     }
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

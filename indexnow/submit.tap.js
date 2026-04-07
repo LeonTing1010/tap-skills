@@ -1,6 +1,7 @@
 export default {
   site: "indexnow",
   name: "submit",
+  intent: "write",
   description: "Submit URLs to IndexNow for instant Bing/Yandex/Google indexing",
   columns: ["url", "status"],
   args: {
@@ -11,7 +12,7 @@ export default {
   health: { min_rows: 1, non_empty: ["url", "status"] },
   examples: [{ host: "example.com", key: "your-indexnow-key", urls: "https://example.com/" }],
 
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const urlList = args.urls.split(",").map(u => u.trim()).filter(Boolean);
     const body = {
       host: args.host,

@@ -1,6 +1,7 @@
 export default {
   site: "xiaohongshu",
   name: "publish",
+  intent: "write",
   description: "Publish Xiaohongshu image-text post",
   columns: ["status", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     images: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     // XHS title limit: 20 chars
     const title = args.title.substring(0, 20)
 

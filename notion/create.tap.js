@@ -1,6 +1,7 @@
 export default {
   site: "notion",
   name: "create",
+  intent: "write",
   description: "Create a new page in Notion",
   columns: ["status", "url"],
   args: {
@@ -8,7 +9,7 @@ export default {
     content: { type: "string", default: "" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title) {
       return [{ status: "error", url: "missing title arg" }]
     }

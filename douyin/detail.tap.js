@@ -1,12 +1,13 @@
 export default {
   site: "douyin",
   name: "detail",
+  intent: "read",
   description: "Read current Douyin video details and comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(tap) {
+  async tap(tap) {
     // Get aweme_id from current URL
     const awemeId = await tap.eval(() => {
       const m = location.pathname.match(/video\/(\d+)/)

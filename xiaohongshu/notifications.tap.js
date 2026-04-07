@@ -1,11 +1,16 @@
 export default {
   site: "xiaohongshu",
   name: "notifications",
+  intent: "read",
   description: "Read Xiaohongshu notifications (followers, comments, likes)",
   url: "https://creator.xiaohongshu.com/creator/message",
   health: { min_rows: 1, non_empty: ["type"] },
 
-  extract: async () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     // API first: creator center message endpoints
     const rows = []
 
@@ -103,5 +108,7 @@ export default {
     }
 
     return rows
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

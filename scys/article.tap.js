@@ -1,6 +1,7 @@
 export default {
   site: "scys",
   name: "article",
+  intent: "read",
   description: "Read SCYS article with title, author, stats, full text",
   columns: ["type", "content", "meta"],
   args: {
@@ -8,7 +9,7 @@ export default {
   },
   health: { min_rows: 3, non_empty: ["content"] },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (args?.url) {
       await tap.nav(args.url)
       await tap.eval('new Promise(r => setTimeout(r, 2000))')

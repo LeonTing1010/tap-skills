@@ -1,6 +1,7 @@
 export default {
   site: "creem",
   name: "update-product",
+  intent: "write",
   description: "Update Creem product — description, image, and return URL",
   columns: ["success", "productId", "name"],
   args: {
@@ -11,7 +12,7 @@ export default {
   },
   examples: [{ productId: "prod_5kjYiJhOb4MsyrNUN4IbXu", description: "Forge taps with your own AI key." }],
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const { productId, description, imagePath, returnUrl } = args
     if (!productId) throw new Error("productId is required")
 

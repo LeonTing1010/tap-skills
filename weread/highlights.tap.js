@@ -1,12 +1,17 @@
 export default {
   site: "weread",
   name: "highlights",
+  intent: "read",
   description: "WeRead book highlights (login required)",
   url: "https://weread.qq.com/web/shelf",
   args: { bookId: { type: "string" } },
   health: { min_rows: 1, non_empty: ["text"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     try {
       const res = await fetch(
         'https://weread.qq.com/api/book/bookmarklist?bookId=' + encodeURIComponent(args.bookId),
@@ -49,5 +54,7 @@ export default {
     } catch (e) {
       return [{ text: 'Error: login required — visit weread.qq.com first', chapter: '', createTime: '', style: '' }]
     }
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

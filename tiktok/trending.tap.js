@@ -1,11 +1,16 @@
 export default {
   site: "tiktok",
   name: "trending",
+  intent: "read",
   description: "TikTok Trending Videos",
   url: "https://www.tiktok.com/explore",
   health: { min_rows: 3, non_empty: ["author"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const links = document.querySelectorAll('a[href*="/video/"]')
     const items = []
     const seen = new Set()
@@ -24,5 +29,7 @@ export default {
       })
     }
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

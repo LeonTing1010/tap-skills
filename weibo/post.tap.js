@@ -1,13 +1,14 @@
 export default {
   site: "weibo",
   name: "post",
+  intent: "write",
   description: "Publish a Weibo post",
   columns: ["status", "url"],
   args: {
     content: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.content) {
       return [{ status: "error", url: "missing content arg" }]
     }

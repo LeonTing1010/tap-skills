@@ -1,11 +1,16 @@
 export default {
   site: "36kr",
   name: "hot",
+  intent: "read",
   description: "36kr hot list - tech and startup news",
   url: "https://www.36kr.com",
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: async () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     const res = await fetch('https://gateway.36kr.com/api/mis/nav/home/nav/rank/hot')
     const data = await res.json()
     if (data.code === 0 && data.data && data.data.hotRankList) {
@@ -26,5 +31,7 @@ export default {
       }))
     }
     return []
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

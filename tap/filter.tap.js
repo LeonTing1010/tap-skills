@@ -1,6 +1,7 @@
 export default {
   site: "tap",
   name: "filter",
+  intent: "read",
   description: "Filter rows where field matches condition (gt, lt, eq, contains)",
   args: {
     field: { type: "string", description: "Column name to filter on" },
@@ -10,7 +11,8 @@ export default {
     contains: { type: "string", description: "Contains substring" },
   },
 
-  transform(rows, args) {
+  async tap(handle, args) {
+    const rows = args.rows || [];
     return rows.filter(r => {
       const v = r[args.field]
       if (args.gt !== undefined) return Number(v) > Number(args.gt)

@@ -28,6 +28,7 @@ function analyzeIntent(text) {
 export default {
   site: "lead-gen",
   name: "assistant",
+  intent: "read",
   description: "AI智能获客助手 - 找第一客户",
   columns: ["source", "post", "intent", "reason", "score"],
 
@@ -42,7 +43,7 @@ export default {
     non_empty: ["source", "post", "intent"]
   },
 
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const subreddits = args.subreddits ? args.subreddits.split(",").map(s => s.trim()) : ["saas", "startups", "entrepreneur"];
     const keywords = args.keywords ? args.keywords.split(",").map(k => k.trim()) : [];
     const results = [];

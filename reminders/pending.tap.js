@@ -5,10 +5,11 @@
 export default {
   site: "reminders",
   name: "pending",
+  intent: "read",
   description: "Incomplete reminders",
   columns: ["title", "list", "dueDate", "priority", "notes"],
 
-  async run(tap) {
+  async tap(tap) {
     const items = await tap.eval(`
       var app = Application("Reminders");
       var results = [];

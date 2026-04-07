@@ -1,6 +1,7 @@
 export default {
   site: "jimeng",
   name: "download",
+  intent: "write",
   description: "Download latest Jimeng AI images locally (direct API)",
   columns: ["file", "size", "prompt"],
   args: {
@@ -9,7 +10,7 @@ export default {
     prompt_filter: { type: "string", default: "", description: "Filter by prompt keyword, empty string gets latest" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     // Ensure we're on jimeng domain for the API call
     await tap.nav("https://jimeng.jianying.com/ai-tool/generate/?type=image&workspace=0")
     await tap.wait(1000)

@@ -1,6 +1,7 @@
 export default {
   site: "zhihu",
   name: "publish",
+  intent: "write",
   description: "Publish article on Zhihu column",
   columns: ["status", "url"],
   args: {
@@ -10,7 +11,7 @@ export default {
     topics: { type: "string", description: "Comma-separated topic names (optional)" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.content) {
       return [{ status: "error", url: "缺少 title 或 content 参数" }]
     }

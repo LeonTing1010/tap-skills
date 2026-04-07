@@ -1,13 +1,14 @@
 export default {
   site: "discord",
   name: "send",
+  intent: "write",
   description: "Send a message in the current Discord channel",
   columns: ["status", "message"],
   args: {
     message: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.message) {
       return [{ status: "error", message: "missing message arg" }]
     }

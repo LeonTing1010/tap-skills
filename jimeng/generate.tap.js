@@ -1,13 +1,14 @@
 export default {
   site: "jimeng",
   name: "generate",
+  intent: "read",
   description: "Jimeng AI text-to-image generation (call nav first)",
   columns: ["status", "prompt"],
   args: {
     prompt: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     // Use Tiptap editor API to insert text — CDP keyboard events cause detach on this page
     await tap.eval((prompt) => {
       const editor = document.querySelector('.tiptap.ProseMirror')?.editor

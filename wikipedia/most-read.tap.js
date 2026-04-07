@@ -1,10 +1,15 @@
 export default {
   site: "wikipedia",
   name: "most-read",
+  intent: "read",
   description: "Wikipedia most read articles today",
   url: "https://en.wikipedia.org",
 
-  extract: async () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     const d = new Date()
     const y = d.getFullYear()
     const m = d.getMonth() + 1
@@ -17,5 +22,7 @@ export default {
       description: String(a.description || '-'),
       views: String(a.views || 0)
     }))
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

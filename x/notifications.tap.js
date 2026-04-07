@@ -1,12 +1,17 @@
 export default {
   site: "x",
   name: "notifications",
+  intent: "read",
   description: "Get X/Twitter notifications (replies, likes, mentions)",
   url: "https://x.com/notifications",
   waitFor: "article",
   timeout: 15000,
   health: { min_rows: 1, non_empty: ["text"] },
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const seen = new Set()
     return Array.from(document.querySelectorAll('article, [data-testid="cellInnerDiv"]')).map(el => {
       const userEl = el.querySelector('[data-testid="User-Name"]')
@@ -35,5 +40,7 @@ export default {
       seen.add(key)
       return { type, user, handle, text, time }
     }).filter(Boolean)
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

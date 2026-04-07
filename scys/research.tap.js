@@ -1,6 +1,7 @@
 export default {
   site: "scys",
   name: "research",
+  intent: "read",
   description: "Search SCYS and extract Feishu doc links (search + article)",
   columns: ["title", "feishu", "url", "badge", "date", "preview"],
   args: {
@@ -9,7 +10,7 @@ export default {
   },
   health: { min_rows: 1, non_empty: ["title"] },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const keyword = String(args.keyword || "")
     if (!keyword) return [{ title: "ERROR: keyword required", feishu: "", url: "", badge: "", date: "", preview: "" }]
     const limit = parseInt(args.limit || "5", 10)

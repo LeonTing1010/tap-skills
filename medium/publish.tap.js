@@ -1,6 +1,7 @@
 export default {
   site: "medium",
   name: "publish",
+  intent: "write",
   description: "Publish an article on Medium",
   columns: ["status", "url"],
   args: {
@@ -8,7 +9,7 @@ export default {
     content: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.content) {
       return [{ status: "error", url: "missing title or content" }]
     }

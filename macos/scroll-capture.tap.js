@@ -11,6 +11,7 @@
 export default {
   site: "macos",
   name: "scroll-capture",
+  intent: "read",
   runtime: "macos",
   description: "Scrolling screenshots of frontmost macOS app (pixel-precise, max 3 screens)",
   columns: ["screen", "file"],
@@ -20,7 +21,7 @@ export default {
     app: { type: "string", default: "", description: "App to activate (empty = frontmost)" },
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const maxScreens = Math.min(Math.max(args.screens || 1, 1), 3);
     const header = args.header || 0;
 

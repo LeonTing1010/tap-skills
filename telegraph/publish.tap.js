@@ -1,6 +1,7 @@
 export default {
   site: "telegraph",
   name: "publish",
+  intent: "write",
   description: "Publish anonymous Telegraph article (call nav first)",
   columns: ["status", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     content: { type: "string", default: "" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     // Write title via Quill API
     await tap.eval((title) => {
       quill.setText('\n')

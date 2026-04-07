@@ -1,12 +1,13 @@
 export default {
   site: "x",
   name: "like",
+  intent: "write",
   description: "Like an X/Twitter post by URL",
   args: [
     { name: "url", type: "string", required: true, description: "Post URL (https://x.com/user/status/123)" }
   ],
   columns: ["status", "url"],
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.url) throw new Error('url is required')
     await tap.nav(args.url)
     await tap.wait(2000)

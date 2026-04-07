@@ -1,6 +1,7 @@
 export default {
   site: "cloudflare",
   name: "security-audit-api",
+  intent: "read",
   description: "Audit Cloudflare security via API — SSL, HSTS, TLS, bot protection. Stable, no browser.",
   url: "https://api.cloudflare.com",
   columns: ["setting", "value", "status"],
@@ -9,7 +10,7 @@ export default {
     zone_id: { type: "string", description: "Cloudflare Zone ID (find at dash.cloudflare.com → your domain → Overview, right sidebar)" },
     token: { type: "string", description: "Cloudflare API Token (Zone Settings:Read)" }
   },
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const zone = args.zone_id;
     const token = args.token;
     if (!token) throw new Error("Missing --token. Create at dash.cloudflare.com/profile/api-tokens (Zone Settings:Read).");

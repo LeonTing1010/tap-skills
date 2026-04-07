@@ -1,12 +1,13 @@
 export default {
   site: "xiaohongshu",
   name: "my_notes",
+  intent: "write",
   description: "Read my published notes and engagement stats",
   columns: ["title", "views", "likes", "collects", "comments", "shares", "publish_date"],
   args: { limit: { type: "int", default: 20 } },
   health: { min_rows: 1, non_empty: ["title"] },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     // Navigate to note manager via creator home → click
     await tap.nav("https://creator.xiaohongshu.com/new/home")
     await tap.wait(4000)

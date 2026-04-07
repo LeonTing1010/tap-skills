@@ -5,10 +5,11 @@
 export default {
   site: "calendar",
   name: "today",
+  intent: "read",
   description: "Today's calendar events",
   columns: ["title", "time", "location", "calendar", "notes"],
 
-  async run(tap) {
+  async tap(tap) {
     const events = await tap.eval(`
       var cal = Application("Calendar");
       var now = new Date();

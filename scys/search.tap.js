@@ -1,6 +1,7 @@
 export default {
   site: "scys",
   name: "search",
+  intent: "write",
   description: "Search SCYS posts with title, author, link, summary",
   columns: ["title", "author", "url", "badge", "date", "preview"],
   args: {
@@ -8,7 +9,7 @@ export default {
   },
   health: { min_rows: 1, non_empty: ["title"] },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     const keyword = String(args.keyword || "")
     if (!keyword) return [{ title: "ERROR: keyword required", author: "", url: "", badge: "", date: "", preview: "" }]
 

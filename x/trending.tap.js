@@ -1,11 +1,16 @@
 export default {
   site: "x",
   name: "trending",
+  intent: "read",
   description: "X/Twitter Trending Topics",
   url: "https://x.com/explore/tabs/trending",
   health: { min_rows: 5, non_empty: ["title"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     const trends = document.querySelectorAll('[data-testid="trend"], [data-testid="cellInnerDiv"]')
     trends.forEach((el, i) => {
@@ -32,5 +37,7 @@ export default {
       seen.add(x.title)
       return true
     })
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

@@ -1,13 +1,18 @@
 export default {
   site: "npmjs",
   name: "popular",
+  intent: "read",
   description: "npm most popular packages by weekly downloads",
   url: "https://www.npmjs.com/browse/popular",
   waitFor: "section.ef4d7c63",
   timeout: 15000,
   health: { min_rows: 5, non_empty: ["name"] },
 
-  extract: () => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = (args) => {
     const items = []
     // Try the package list items — npm uses dynamic class names, so use multiple strategies
     const packages = document.querySelectorAll('section.ef4d7c63') ||
@@ -48,5 +53,7 @@ export default {
       }
     })
     return items
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

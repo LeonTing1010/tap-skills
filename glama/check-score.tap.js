@@ -1,13 +1,14 @@
 export default {
   site: "glama",
   name: "check-score",
+  intent: "read",
   description: "Check Glama MCP server score — returns all score items with pass/fail status",
   columns: ["status", "item"],
   args: {
     owner: { type: "string", description: "GitHub owner (e.g. LeonTing1010)" },
     repo: { type: "string", description: "GitHub repo name (e.g. tap)" }
   },
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const owner = args.owner || "LeonTing1010";
     const repo = args.repo || "tap";
     

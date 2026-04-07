@@ -1,12 +1,13 @@
 export default {
   site: "zhihu",
   name: "detail",
+  intent: "read",
   description: "Read current Zhihu question details, answers, comments (API)",
   columns: ["type", "content", "likes", "author"],
   args: {},
   health: { min_rows: 1, non_empty: ["content"] },
 
-  async run(tap) {
+  async tap(tap) {
     const items = await tap.eval(async () => {
       const results = []
       const url = location.href

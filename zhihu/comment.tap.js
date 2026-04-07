@@ -1,13 +1,14 @@
 export default {
   site: "zhihu",
   name: "comment",
+  intent: "write",
   description: "Post a comment on current Zhihu answer",
   columns: ["status", "comment"],
   args: {
     comment: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.comment) {
       return [{ status: "error", comment: "missing comment arg" }]
     }

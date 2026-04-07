@@ -7,10 +7,11 @@
 export default {
   site: "shortcuts",
   name: "list",
+  intent: "read",
   description: "List available Apple Shortcuts",
   columns: ["name"],
 
-  async run(tap) {
+  async tap(tap) {
     const result = await tap.eval(`
       var app = Application.currentApplication();
       app.includeStandardAdditions = true;

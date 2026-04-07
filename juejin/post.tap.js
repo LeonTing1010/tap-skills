@@ -1,6 +1,7 @@
 export default {
   site: "juejin",
   name: "post",
+  intent: "write",
   description: "Publish article on Juejin",
   columns: ["status", "url"],
   args: {
@@ -10,7 +11,7 @@ export default {
     tags: { type: "string", description: "Comma-separated tags (max 3)" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.body) throw new Error('title and body are required')
 
     await tap.nav('https://juejin.cn/editor/drafts/new?v=2')

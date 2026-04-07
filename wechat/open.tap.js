@@ -1,6 +1,7 @@
 export default {
   site: "wechat",
   name: "open",
+  intent: "read",
   description: "Search and open WeChat article (keyword+index or URL)",
   columns: ["title", "author", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     url: { type: "string", default: "" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (args.url) {
       await tap.nav(args.url)
     } else if (args.keyword) {

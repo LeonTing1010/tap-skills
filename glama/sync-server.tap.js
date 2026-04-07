@@ -1,13 +1,14 @@
 export default {
   site: "glama",
   name: "sync-server",
+  intent: "write",
   description: "Sync Glama MCP server with latest GitHub data — updates commit SHA, LICENSE, README detection",
   columns: ["before", "after"],
   args: {
     owner: { type: "string", description: "GitHub owner" },
     repo: { type: "string", description: "GitHub repo name" }
   },
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const owner = args.owner || "LeonTing1010";
     const repo = args.repo || "tap";
     

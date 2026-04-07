@@ -1,12 +1,17 @@
 export default {
   site: "arxiv",
   name: "search",
+  intent: "read",
   description: "Search arXiv papers",
   url: "https://arxiv.org",
   args: { keyword: { type: "string" } },
   health: { min_rows: 3, non_empty: ["title"] },
 
-  extract: async (args) => {
+  async tap(handle, args) {
+    const url = typeof this.url === "function" ? this.url(args) : this.url;
+    if (url) await handle.nav(url);
+    if (this.waitFor) await handle.waitFor(this.waitFor);
+    const fn = async (args) => {
     const params = new URLSearchParams({
       search_query: 'all:' + args.keyword,
       start: '0',
@@ -42,5 +47,7 @@ export default {
         url: id
       }
     })
+  };
+    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);
   }
 }

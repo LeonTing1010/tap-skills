@@ -1,13 +1,14 @@
 export default {
   site: "glama",
   name: "build-release",
+  intent: "write",
   description: "Trigger a Glama Dockerfile build & release for an MCP server",
   columns: ["config", "result"],
   args: {
     owner: { type: "string", description: "GitHub owner" },
     repo: { type: "string", description: "GitHub repo name" }
   },
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const owner = args.owner || "LeonTing1010";
     const repo = args.repo || "tap";
     

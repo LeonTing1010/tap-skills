@@ -1,6 +1,7 @@
 export default {
   site: "glama",
   name: "run-inspector",
+  intent: "write",
   description: "Open Glama MCP Inspector and execute tools to generate usage data",
   columns: ["tool", "status"],
   args: {
@@ -8,7 +9,7 @@ export default {
     repo: { type: "string", description: "GitHub repo name" },
     tools: { type: "string", description: "Comma-separated tool names to execute (default: tap_list,tap_version,tap_logs)" }
   },
-  run: async (tap, args) => {
+  tap: async (tap, args) => {
     const owner = args.owner || "LeonTing1010";
     const repo = args.repo || "tap";
     const toolNames = (args.tools || "tap_list,tap_version,tap_logs").split(",").map(t => t.trim());

@@ -1,6 +1,7 @@
 export default {
   site: "v2ex",
   name: "post",
+  intent: "write",
   description: "Post a topic on V2EX",
   columns: ["status", "url"],
   args: {
@@ -9,7 +10,7 @@ export default {
     node: { type: "string" }
   },
 
-  async run(tap, args) {
+  async tap(tap, args) {
     if (!args.title || !args.content || !args.node) {
       return [{ status: "error", url: "missing title, content, or node" }]
     }
