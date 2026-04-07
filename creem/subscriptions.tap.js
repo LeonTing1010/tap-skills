@@ -6,7 +6,7 @@ const columns = ["email", "product", "status", "price", "period_end", "id"];
 const args = {
   key: { type: "string", required: true, description: "Creem API key" },
 };
-const health = { min_rows: 1 };
+const health = { min_rows: 1, requires_auth: true };
 const examples = [{ key: "creem_test_xxx" }];
 
 async function tap_fn(tap, args) {
