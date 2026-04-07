@@ -56,17 +56,30 @@ async function testAsync(tapId, rule, fn) {
   }
 }
 
-async function findTapFiles(dir) {
+// Repo layout (since #9): tier subdirs (showcase/, community/) hold sites.
+// Walk each tier and discover {site}/{name}.tap.js files inside.
+const TIERS = ['showcase', 'community']
+
+async function findTapFiles(rootDir) {
   const files = []
-  for (const site of await readdir(dir)) {
-    const sitePath = join(dir, site)
-    try {
-      for (const file of await readdir(sitePath)) {
-        if (file.endsWith('.tap.js')) {
-          files.push({ site, name: basename(file, '.tap.js'), path: join(sitePath, file) })
+  for (const tier of TIERS) {
+    const tierPath = join(rootDir, tier)
+    if (!existsSync(tierPath)) continue
+    for (const site of await readdir(tierPath)) {
+      const sitePath = join(tierPath, site)
+      try {
+        for (const file of await readdir(sitePath)) {
+          if (file.endsWith('.tap.js')) {
+            files.push({
+              tier,
+              site,
+              name: basename(file, '.tap.js'),
+              path: join(sitePath, file),
+            })
+          }
         }
-      }
-    } catch { /* not a directory */ }
+      } catch { /* not a directory */ }
+    }
   }
   return files
 }
@@ -248,9 +261,10 @@ for (const { site, name, path } of tapFiles) {
   const tapCalls = [...src.matchAll(/(?:handle|tap|page)\.run\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']/g)]
   for (const [, refSite, refName] of tapCalls) {
     test(id, `[composition] handle.run("${refSite}", "${refName}") references existing tap`, () => {
-      const refPath = join(TAPS_DIR, refSite, `${refName}.tap.js`)
-      assert(existsSync(refPath),
-        `${id} calls handle.run("${refSite}", "${refName}") but ${refSite}/${refName}.tap.js does not exist`)
+      // Resolve in either tier — showcase or community both count
+      const found = TIERS.some(t => existsSync(join(TAPS_DIR, t, refSite, `${refName}.tap.js`)))
+      assert(found,
+        `${id} calls handle.run("${refSite}", "${refName}") but no ${refSite}/${refName}.tap.js exists in showcase/ or community/`)
     })
   }
 }
