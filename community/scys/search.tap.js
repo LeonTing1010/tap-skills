@@ -2,7 +2,7 @@ export default {
   site: "scys",
   name: "search",
   intent: "write",
-  description: "Search Shengcaiyoushu content by keyword",
+  description: "Search SCYS by keyword (requires login)",
   columns: ["title", "author", "url", "badge", "date", "preview"],
   args: {
     keyword: { type: "string", description: "搜索关键词" }
