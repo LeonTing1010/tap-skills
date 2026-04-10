@@ -20,39 +20,34 @@
 
 ---
 
-Community skills for [Tap](https://github.com/LeonTing1010/tap) — the AI interface compiler. Every `.tap.js` file is a program that runs forever at $0.
+Community skills for [Tap](https://github.com/LeonTing1010/tap). Every `.tap.js` file is a deterministic program that runs forever at $0.
 
 ## Install & Usage
 
-### Option 1 — Zero-install via npx (any machine with Node)
+### Option 1 — Use in Claude Code / Cursor (Free)
+
+```json
+{ "mcpServers": { "tap": { "command": "tap", "args": ["mcp"] } } }
+```
+
+No extension needed. 140+ skills work immediately in any MCP agent.
+
+### Option 2 — Zero-install via npx
 
 ```bash
 npx -y @taprun/cli github trending
 ```
 
-First call downloads the matching `@taprun/cli` binary from npm (~30MB) and caches it. Subsequent calls are instant. Works on macOS, Linux, Windows — no extension required for many skills (use `--runtime playwright` for headless browser tasks).
+First call downloads the platform binary (~30MB) and caches it. Subsequent calls are instant.
 
-### Option 2 — Permanent install via curl (macOS / Linux)
+### Option 3 — Permanent install via curl (macOS / Linux)
 
 ```bash
-curl -fsSL https://taprun.dev/install.sh | sh   # Install Tap binary to /usr/local/bin/tap
+curl -fsSL https://taprun.dev/install.sh | sh
 tap update                                        # Pull latest community skills
 tap list                                          # See all skills
 tap github trending                               # Run any skill
 ```
-
-### Option 3 — Claude Code Plugin Marketplace 🎉
-
-If you're using [Claude Code](https://claude.ai/code), you can install Tap skills as a first-class plugin:
-
-```
-/plugin marketplace add LeonTing1010/tap-skills
-/plugin install tap-runner@tap-skills
-```
-
-After install, mention any skill in conversation — Claude Code recognises it and runs the underlying `npx -y @taprun/cli ...` command automatically. **Zero configuration, deterministic execution, $0 per run.**
-
-Currently bundled in `tap-runner` plugin: `github-trending`, `arxiv-search`. More added with each release.
 
 ## All Skills
 
