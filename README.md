@@ -226,6 +226,12 @@ tap mysite hot   # Test it
 
 Every contribution is welcome — from fixing a selector to adding a new site.
 
+## Support
+
+If tap-skills is useful to you, consider buying me a coffee:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/leonting1010)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
