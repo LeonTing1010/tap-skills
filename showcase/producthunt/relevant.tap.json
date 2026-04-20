@@ -1,0 +1,49 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/producthunt/relevant",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/producthunt/relevant",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "producthunt",
+    "name": "relevant",
+    "intent": "read",
+    "description": "Find recent PH launches matching keywords. L1 source: PH Atom feed /feed parsed via page-context fetch.",
+    "columns": [
+      "rank",
+      "title",
+      "tagline",
+      "maker",
+      "published",
+      "url"
+    ],
+    "args": {
+      "keywords": {
+        "type": "string",
+        "default": "agent,automation,workflow,mcp,browser,scraper,cli,devtool,prompt,llm,coding,copilot",
+        "description": "Comma-separated keywords; matches against title+tagline case-insensitive. Empty string = no filter."
+      },
+      "limit": {
+        "type": "int",
+        "default": 20
+      }
+    },
+    "health": {
+      "min_rows": 3,
+      "non_empty": [
+        "title",
+        "url"
+      ]
+    },
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n  const limit = args.limit || 20\n  const rawKws = (args.keywords == null ? 'agent,automation,workflow,mcp,browser,scraper,cli,devtool,prompt,llm,coding,copilot' : args.keywords)\n  const kws = rawKws.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean)\n  await tap.nav('https://www.producthunt.com/')\n  await tap.wait(400)\n  const entries = await tap.eval(async () => {\n    const r = await fetch('/feed', { credentials: 'include' })\n    const xml = await r.text()\n    const decode = (s) => { const t = document.createElement('textarea'); t.innerHTML = s; return t.value }\n    const doc = new DOMParser().parseFromString(xml, 'application/xml')\n    const entries = Array.from(doc.querySelectorAll('entry'))\n    return entries.map((e) => {\n      const title = (e.querySelector('title') && e.querySelector('title').textContent || '').trim()\n      let link = ''\n      const links = e.querySelectorAll('link')\n      for (const l of links) {\n        const rel = l.getAttribute('rel') || 'alternate'\n        if (rel === 'alternate') { link = l.getAttribute('href') || ''; break }\n      }\n      const published = (e.querySelector('published') && e.querySelector('published').textContent || '').trim()\n      const author = e.querySelector('author')\n      const maker = (author && author.querySelector('name') && author.querySelector('name').textContent || '').trim()\n      const contentRaw = (e.querySelector('content') && e.querySelector('content').textContent || '')\n      const html = decode(contentRaw)\n      const doc2 = new DOMParser().parseFromString('<div>' + html + '</div>', 'text/html')\n      const firstP = (doc2.querySelector('p') && doc2.querySelector('p').textContent || '').trim()\n      return { title, url: link, published, maker, tagline: firstP }\n    })\n  })\n  const filtered = kws.length === 0 ? entries : entries.filter((e) => {\n    if (!e.title || !e.url) return false\n    const hay = (e.title + ' ' + (e.tagline || '')).toLowerCase()\n    return kws.some((k) => hay.includes(k))\n  })\n  return filtered.slice(0, limit).map((e, i) => ({\n    rank: String(i + 1),\n    title: e.title,\n    tagline: (e.tagline || '').slice(0, 200),\n    maker: e.maker || '',\n    published: (e.published || '').slice(0, 10),\n    url: e.url\n  }))\n}"
+      }
+    ]
+  }
+}
