@@ -1,0 +1,51 @@
+name: Doctor badges
+
+on:
+  schedule:
+    - cron: "0 5 * * *"  # daily 05:00 UTC (~13:00 Asia/Shanghai)
+  workflow_dispatch:     # manual trigger
+
+concurrency:
+  group: doctor-badges
+  cancel-in-progress: false
+
+jobs:
+  run-doctor:
+    runs-on: ubuntu-latest
+    # Requires:
+    #   secrets.TAPRUN_WEB_TOKEN — fine-grained PAT with:
+    #     • Repository access: LeonTing1010/tap
+    #     • Contents: read and write
+    # Without it, the workflow exits early; badges stay stale.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Download tap CLI (Linux)
+        run: |
+          curl -fsSL -o tap 'https://github.com/LeonTing1010/tap/releases/latest/download/tap-linux-x64'
+          chmod +x tap
+          sudo mv tap /usr/local/bin/tap
+          tap --version
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}
+
+      - name: Install Playwright chromium
+        run: |
+          # Tap runs headless via Playwright by default; pull chromium once.
+          npx --yes playwright@latest install --with-deps chromium
+
+      - name: Run doctor + update badges
+        env:
+          TAPRUN_WEB_TOKEN: ${{ secrets.TAPRUN_WEB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          SKILLS_ROOT: ${{ github.workspace }}
+          PUBLIC_CLONE: ${{ runner.temp }}/public
+        run: deno run -A .github/scripts/doctor-badges.ts
