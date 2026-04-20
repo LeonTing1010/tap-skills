@@ -1,23 +1,37 @@
 /**
- * Constraint: .tap.js format contract (v0.9+)
+ * Constraint: tap format contract (v0.9+)
  * Classification: safety / what — invalid format = runtime crash
  *
- * Canonical shape (single function, explicit intent):
+ * Two accepted shapes:
  *
- *   export default {
- *     site, name, description,
- *     intent: "read" | "write",   // optional, default "read"
- *     columns: ["..."],           // required
- *     health: { min_rows, non_empty },
- *     examples: [{...}],
- *     async tap(handle, args) { ... }
- *   }
+ *   .tap.js (legacy ES module):
+ *     export default {
+ *       site, name, description,
+ *       intent: "read" | "write",   // optional, default "read"
+ *       columns: ["..."],           // required
+ *       health: { min_rows, non_empty },
+ *       examples: [{...}],
+ *       async tap(handle, args) { ... }
+ *     }
+ *
+ *   .tap.json (W3C Annotation / ExecutionPlan — canonical):
+ *     {
+ *       "@context": [...anno.jsonld, ...tap-v1],
+ *       "type": "Annotation",
+ *       "motivation": "tap:executing",
+ *       "body": {
+ *         "type": "tap:ExecutionPlan",
+ *         "site", "name", "intent", "description",
+ *         "columns": [...], "args": {...}, "health": {...},
+ *         "ops": [{ "op": "exec", "fn": "async function(tap, args) { ... }" }]
+ *       }
+ *     }
  *
  * Run: node test/tap-format.test.mjs
  */
 
 import { strict as assert } from 'node:assert'
-import { readdir } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -73,7 +87,16 @@ async function findTapFiles(rootDir) {
             files.push({
               tier,
               site,
+              kind: 'js',
               name: basename(file, '.tap.js'),
+              path: join(sitePath, file),
+            })
+          } else if (file.endsWith('.tap.json')) {
+            files.push({
+              tier,
+              site,
+              kind: 'json',
+              name: basename(file, '.tap.json'),
               path: join(sitePath, file),
             })
           }
@@ -84,26 +107,69 @@ async function findTapFiles(rootDir) {
   return files
 }
 
-console.log('\n.tap.js format constraints (v0.9+ unified shape)\n')
+// Normalize a .tap.json (W3C Annotation/ExecutionPlan) into the same shape
+// as a .tap.js default export, so the downstream constraint checks
+// apply uniformly.
+async function loadJsonTap(path) {
+  const raw = await readFile(path, 'utf8')
+  let plan
+  try { plan = JSON.parse(raw) }
+  catch (e) { throw new Error(`not valid JSON: ${e.message}`) }
+
+  const body = plan?.body
+  assert(body && typeof body === 'object', 'missing body')
+  assert(body.type === 'tap:ExecutionPlan', `body.type must be "tap:ExecutionPlan", got "${body.type}"`)
+  assert(Array.isArray(body.ops) && body.ops.length > 0, 'body.ops must be non-empty array')
+
+  // Concat all exec ops' fn sources so security checks see everything.
+  const execOps = body.ops.filter((o) => o?.op === 'exec' && typeof o.fn === 'string')
+  assert(execOps.length > 0, 'body.ops must contain at least one {op:"exec", fn:"..."}')
+  const tapSource = execOps.map((o) => o.fn).join('\n\n')
+
+  // Fake a function object so tap.toString() returns the source string.
+  const fakeTap = { toString: () => tapSource }
+
+  return {
+    site: body.site,
+    name: body.name,
+    description: body.description,
+    intent: body.intent,
+    columns: body.columns,
+    args: body.args,
+    health: body.health,
+    requires: body.requires,
+    tap: fakeTap,
+  }
+}
+
+console.log('\ntap format constraints (.tap.js + .tap.json, v0.9+ unified shape)\n')
 
 const tapFiles = await findTapFiles(TAPS_DIR)
 
-test('global', 'at least one .tap.js file exists', () => {
-  assert(tapFiles.length > 0, `no .tap.js files found in ${TAPS_DIR}`)
+test('global', 'at least one tap file exists', () => {
+  assert(tapFiles.length > 0, `no .tap.js / .tap.json files found in ${TAPS_DIR}`)
 })
 
-for (const { site, name, path } of tapFiles) {
+for (const { site, name, kind, path } of tapFiles) {
   const id = `${site}/${name}`
-  console.log(`\n  ${id}.tap.js`)
+  const ext = kind === 'json' ? '.tap.json' : '.tap.js'
+  console.log(`\n  ${id}${ext}`)
 
-  let mod
-  await testAsync(id, `loads as ES module`, async () => {
-    mod = await import(pathToFileURL(path))
-    assert(mod.default, 'must have default export')
-  })
-
-  if (!mod?.default) continue
-  const tap = mod.default
+  let tap
+  if (kind === 'js') {
+    let mod
+    await testAsync(id, `loads as ES module`, async () => {
+      mod = await import(pathToFileURL(path))
+      assert(mod.default, 'must have default export')
+    })
+    if (!mod?.default) continue
+    tap = mod.default
+  } else {
+    await testAsync(id, `parses as W3C Annotation plan`, async () => {
+      tap = await loadJsonTap(path)
+    })
+    if (!tap) continue
+  }
 
   // ===== STRUCTURE =====
 
@@ -127,9 +193,13 @@ for (const { site, name, path } of tapFiles) {
     assert.equal(tap.name, name)
   })
 
-  test(id, `has tap() function`, () => {
-    assert.equal(typeof tap.tap, 'function',
-      'must define `async tap(handle, args) { ... }` — single entry point')
+  test(id, `has tap entry (function or exec op)`, () => {
+    if (kind === 'js') {
+      assert.equal(typeof tap.tap, 'function',
+        'must define `async tap(handle, args) { ... }` — single entry point')
+    } else {
+      assert(tap.tap, 'must have at least one exec op in body.ops[]')
+    }
   })
 
   if (!tap.tap) continue
@@ -261,10 +331,12 @@ for (const { site, name, path } of tapFiles) {
   const tapCalls = [...src.matchAll(/(?:handle|tap|page)\.run\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']/g)]
   for (const [, refSite, refName] of tapCalls) {
     test(id, `[composition] handle.run("${refSite}", "${refName}") references existing tap`, () => {
-      // Resolve in either tier — showcase or community both count
-      const found = TIERS.some(t => existsSync(join(TAPS_DIR, t, refSite, `${refName}.tap.js`)))
+      // Resolve in either tier — showcase or community; either .tap.js or .tap.json counts
+      const found = TIERS.some(t =>
+        existsSync(join(TAPS_DIR, t, refSite, `${refName}.tap.js`)) ||
+        existsSync(join(TAPS_DIR, t, refSite, `${refName}.tap.json`)))
       assert(found,
-        `${id} calls handle.run("${refSite}", "${refName}") but no ${refSite}/${refName}.tap.js exists in showcase/ or community/`)
+        `${id} calls handle.run("${refSite}", "${refName}") but no ${refSite}/${refName}.tap.{js,json} exists in showcase/ or community/`)
     })
   }
 }
