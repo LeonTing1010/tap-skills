@@ -1,0 +1,38 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/quora/feed-jp",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/quora/feed-jp",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "quora",
+    "name": "feed-jp",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, _args) {\n\n    await handle.nav(this.url);\n    await handle.wait(3500);\n    // Aggressive scroll to load the infinite feed\n    for (let y = 1000; y <= 18000; y += 1500) {\n      await handle.eval(\"window.scrollTo(0, \" + y + \")\");\n      await handle.wait(900);\n    }\n    return await handle.eval(() => {\n      const items = [];\n      const seen = new Set();\n\n      // Quora question cards surface as `a.q-box.qu-display--block` whose text\n      // is the full question sentence (length 15-400, contains CJK, usually\n      // ends with ？ but not always — some end in ます/です).\n      const anchors = document.querySelectorAll(\"a.q-box.qu-display--block\");\n      anchors.forEach((a) => {\n        const title = (a.textContent || \"\").replace(/\\s+/g, \" \").trim();\n        if (title.length < 15 || title.length > 400) return;\n        // Must contain Japanese characters (hiragana/katakana/CJK) — reject topic tags like \"数学\" (too short anyway)\n        if (!/[\\u3040-\\u309F\\u30A0-\\u30FF\\u4E00-\\u9FFF]/.test(title)) return;\n        // Drop UI fragments\n        if (/^(ホーム|回答|スペース|通知|質問する|フォロー|ログイン|サインアップ)/.test(title)) return;\n        if (seen.has(title)) return;\n        seen.add(title);\n\n        // Body: find nearest card/row parent and grab its innerText minus the title\n        let box = a.closest(\"div.q-box.qu-vertical-align--top, div[class*='Card'], div[class*='Feed']\");\n        if (!box) box = a.parentElement?.parentElement?.parentElement || a.parentElement;\n        let body = \"\";\n        if (box) {\n          body = (box.innerText || \"\").replace(title, \"\").replace(/\\s+/g, \" \").trim().slice(0, 1500);\n        }\n        const url = a.href || (\"https://jp.quora.com\" + a.getAttribute(\"href\"));\n        items.push({ title: title, url: url, body: body });\n      });\n      return items.slice(0, 80);\n    });\n  \n}"
+      }
+    ],
+    "description": "Quora Japan homepage feed — questions + answer snippets from the explore feed. Each question is a L3/L5 signal container by construction.",
+    "health": {
+      "min_rows": 3,
+      "non_empty": [
+        "title"
+      ]
+    },
+    "examples": [
+      {}
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.990Z"
+}

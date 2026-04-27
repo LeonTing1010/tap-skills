@@ -1,0 +1,42 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/daily/brief",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/daily/brief",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "daily",
+    "name": "brief",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const rows = [];\n\n    // --- Calendar events (composition: page.tap) ---\n    try {\n      const calResult = await tap.run(\"calendar\", \"today\");\n      for (const event of (calResult.rows || [])) {\n        rows.push({\n          type: \"event\",\n          title: event.title,\n          detail: [event.time, event.location].filter(Boolean).join(\" @ \"),\n          source: event.calendar,\n        });\n      }\n    } catch (e) {\n      rows.push({ type: \"error\", title: \"Calendar\", detail: String(e), source: \"\" });\n    }\n\n    // --- Pending reminders (composition: page.tap) ---\n    try {\n      const remResult = await tap.run(\"reminders\", \"pending\");\n      for (const item of (remResult.rows || [])) {\n        rows.push({\n          type: \"todo\",\n          title: item.title,\n          detail: item.dueDate ? `due ${item.dueDate}` : \"\",\n          source: item.list,\n        });\n      }\n    } catch (e) {\n      rows.push({ type: \"error\", title: \"Reminders\", detail: String(e), source: \"\" });\n    }\n\n    // --- Save to Notes if requested (composition: page.tap) ---\n    if (args.save === \"true\" || args.save === true) {\n      const today = new Date().toISOString().slice(0, 10);\n      const body = rows\n        .filter(r => r.type !== \"error\")\n        .map(r => `[${r.type}] ${r.title}${r.detail ? \" — \" + r.detail : \"\"}`)\n        .join(\"\\n\");\n\n      try {\n        await tap.run(\"notes\", \"create\", {\n          title: `Daily Brief ${today}`,\n          body: body || \"No events or reminders today.\",\n        });\n        rows.push({ type: \"saved\", title: `Daily Brief ${today}`, detail: \"→ Apple Notes\", source: \"notes\" });\n      } catch (e) {\n        rows.push({ type: \"error\", title: \"Notes save\", detail: String(e), source: \"\" });\n      }\n    }\n\n    return rows;\n  \n}"
+      }
+    ],
+    "description": "Daily briefing from Calendar + Reminders",
+    "columns": [
+      "type",
+      "title",
+      "detail",
+      "source"
+    ],
+    "args": {
+      "save": {
+        "type": "string",
+        "default": "false",
+        "description": "Save to Apple Notes"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.000Z"
+}

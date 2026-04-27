@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/medium/hot",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/medium/hot",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "medium",
+    "name": "hot",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = async (args) => {\n    // Wait for articles to load\n    await new Promise(resolve => {\n      let attempts = 0\n      const check = () => {\n        const articles = document.querySelectorAll('article')\n        if (articles.length > 0 || attempts > 40) {\n          resolve()\n          return\n        }\n        attempts++\n        setTimeout(check, 500)\n      }\n      check()\n    })\n\n    return Array.from(document.querySelectorAll('article')).map((el, i) => {\n      const titleEl = el.querySelector('h2, h3')\n      const title = titleEl?.textContent?.trim() || ''\n      const authorEl = el.querySelector('a[data-testid=\"authorName\"], p > a')\n      const author = authorEl?.textContent?.trim() || ''\n      const timeEl = el.querySelector('time, span[data-testid=\"storyPublishDate\"]')\n      const time = timeEl?.textContent?.trim() || ''\n      const linkEl = el.querySelector('a[aria-label], h2 a, h3 a')\n      const href = linkEl?.getAttribute('href') || ''\n      const url = href.startsWith('http') ? href : (href ? 'https://medium.com' + href : '')\n      const clapEl = el.querySelector('[data-testid=\"clapCount\"], button[aria-label*=\"clap\"] span')\n      const claps = clapEl?.textContent?.trim() || '0'\n\n      return {\n        rank: String(i + 1),\n        title,\n        author,\n        claps,\n        time,\n        url\n      }\n    }).filter(item => item.title.length > 0)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Medium Trending articles",
+    "health": {
+      "min_rows": 3,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.998Z"
+}

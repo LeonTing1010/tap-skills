@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/reuters/news",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/reuters/news",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "reuters",
+    "name": "news",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    const items = []\n    const seen = new Set()\n\n    // Strategy 1: story cards with data-testid\n    const cards = document.querySelectorAll('[data-testid=\"MediaStoryCard\"], [data-testid=\"TextStoryCard\"]')\n    if (cards.length > 0) {\n      cards.forEach(card => {\n        const headlineEl = card.querySelector('[data-testid=\"Heading\"], h3, h2')\n        const headline = headlineEl?.textContent?.trim() || ''\n        const summaryEl = card.querySelector('p, [data-testid=\"Body\"]')\n        const summary = summaryEl?.textContent?.trim() || ''\n        const categoryEl = card.querySelector('[data-testid=\"Label\"], [data-testid=\"Topic\"]')\n        const category = categoryEl?.textContent?.trim() || ''\n        const link = card.querySelector('a')?.href || card.closest('a')?.href || ''\n\n        if (headline && headline.length > 5 && !seen.has(headline)) {\n          seen.add(headline)\n          items.push({ headline, summary, category, link })\n        }\n      })\n      return items\n    }\n\n    // Strategy 2: article links with headlines\n    const articles = document.querySelectorAll('article, [class*=\"story-card\"], [class*=\"StoryCard\"]')\n    articles.forEach(article => {\n      const headlineEl = article.querySelector('h2, h3, [class*=\"heading\"], [class*=\"title\"]')\n      const headline = headlineEl?.textContent?.trim() || ''\n      const summaryEl = article.querySelector('p')\n      const summary = summaryEl?.textContent?.trim() || ''\n      const link = article.querySelector('a')?.href || ''\n      // Infer category from URL\n      const catMatch = link.match(/reuters\\.com\\/([a-z-]+)\\//)\n      const category = catMatch ? catMatch[1].replace(/-/g, ' ') : ''\n\n      if (headline && headline.length > 5 && !seen.has(headline)) {\n        seen.add(headline)\n        items.push({ headline, summary, category, link })\n      }\n    })\n\n    // Strategy 3: broad fallback\n    if (items.length < 5) {\n      const links = document.querySelectorAll('a[href*=\"/article/\"], a[href*=\"/world/\"], a[href*=\"/business/\"], a[href*=\"/technology/\"]')\n      links.forEach(a => {\n        const headline = a.textContent.trim()\n        const link = a.href || ''\n        if (headline && headline.length > 15 && headline.length < 300 && !seen.has(headline)) {\n          seen.add(headline)\n          const catMatch = link.match(/reuters\\.com\\/([a-z-]+)\\//)\n          const category = catMatch ? catMatch[1].replace(/-/g, ' ') : ''\n          items.push({ headline, summary: '', category, link })\n        }\n      })\n    }\n\n    return items.slice(0, 30)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Reuters top news stories",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "headline"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.985Z"
+}

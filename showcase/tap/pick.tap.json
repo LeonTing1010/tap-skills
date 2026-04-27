@@ -1,0 +1,36 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/tap/pick",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/tap/pick",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "tap",
+    "name": "pick",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "pick",
+        "fields": "{{args.fields}}",
+        "on": "args.rows"
+      }
+    ],
+    "description": "Select specific columns from rows (projection)",
+    "args": {
+      "fields": {
+        "type": "string",
+        "description": "Comma-separated column names to keep"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.111Z"
+}

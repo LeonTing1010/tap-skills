@@ -1,0 +1,36 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/hackernews/hot",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/hackernews/hot",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "hackernews",
+    "name": "hot",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    const items = []\n    document.querySelectorAll('.athing').forEach((row) => {\n      const rank = (row.querySelector('.rank') || {}).textContent || ''\n      const titleEl = row.querySelector('.titleline > a')\n      const title = titleEl ? titleEl.textContent.trim() : ''\n      const url = titleEl ? titleEl.href : ''\n      const subRow = row.nextElementSibling\n      const scoreEl = subRow ? subRow.querySelector('.score') : null\n      const score = scoreEl ? scoreEl.textContent.replace(/[^0-9]/g, '') : '0'\n      const authorEl = subRow ? subRow.querySelector('.hnuser') : null\n      const author = authorEl ? authorEl.textContent : ''\n      const ageEl = subRow ? subRow.querySelector('.age a') : null\n      const age = ageEl ? ageEl.textContent : ''\n      const links = subRow ? subRow.querySelectorAll('a') : []\n      let comments = '0'\n      for (const a of links) {\n        const m = a.textContent.match(/(\\d+)\\s*comment/)\n        if (m) { comments = m[1]; break }\n      }\n      if (title) {\n        items.push({ rank: rank.replace('.', '').trim(), title, url, score, author, comments, age })\n      }\n    })\n    return items\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Hacker News top stories",
+    "health": {
+      "min_rows": 10,
+      "non_empty": [
+        "title",
+        "score"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.107Z"
+}

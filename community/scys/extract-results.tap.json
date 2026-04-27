@@ -1,0 +1,43 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/scys/extract-results",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/scys/extract-results",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "scys",
+    "name": "extract-results",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    return await tap.eval(() => {\n      var allEls = document.querySelectorAll('*')\n      var vueApp = null\n      for (var i = 0; i < allEls.length; i++) {\n        var keys = Object.keys(allEls[i])\n        for (var j = 0; j < keys.length; j++) {\n          if (keys[j].indexOf('__vue_app__') === 0) { vueApp = allEls[i][keys[j]]; break }\n        }\n        if (vueApp) break\n      }\n      if (!vueApp) return [{ title: 'ERROR: Vue app not found', author: '', url: '', badge: '', date: '', preview: '' }]\n\n      var provides = vueApp._context.provides\n      var symbols = Object.getOwnPropertySymbols(provides)\n      var pinia = null\n      for (var s = 0; s < symbols.length; s++) {\n        if (provides[symbols[s]] && provides[symbols[s]]._s) { pinia = provides[symbols[s]]; break }\n      }\n      if (!pinia) return [{ title: 'ERROR: Pinia not found', author: '', url: '', badge: '', date: '', preview: '' }]\n\n      var store = pinia._s.get('searchContentStore')\n      if (!store) return [{ title: 'ERROR: store not found', author: '', url: '', badge: '', date: '', preview: '' }]\n\n      var startTime = Date.now()\n      while (Date.now() - startTime < 10000) {\n        if (store.postList && store.postList.length > 0) break\n        var end = Date.now() + 500\n        while (Date.now() < end) { /* busy wait */ }\n      }\n\n      var postList = store.postList || []\n      var total = store.total || 0\n      var scenes = store.pageSceneList || []\n\n      var summary = {\n        title: '共' + total + '条',\n        author: '', url: '', badge: 'summary', date: '',\n        preview: scenes.map(function(s) { return s.name + '(' + s.count + ')' }).join(' ')\n      }\n\n      var rows = postList.map(function(p) {\n        return {\n          title:   (p.showTitle || p.title || '').replace(/<[^>]+>/g, ''),\n          author:  p.authorName || p.nickName || '',\n          url:     'https://scys.com/articleDetail/' + (p.entityType || 'xq_topic') + '/' + (p.topicId || ''),\n          badge:   p.isDigested ? '精华' : '',\n          date:    p.createDate || '',\n          preview: (p.content || '').replace(/<[^>]+>/g, '').substring(0, 200)\n        }\n      })\n\n      rows.unshift(summary)\n      return rows\n    })\n  \n}"
+      }
+    ],
+    "description": "Extract search results from SCYS Pinia store (requires login)",
+    "columns": [
+      "title",
+      "author",
+      "url",
+      "badge",
+      "date",
+      "preview"
+    ],
+    "health": {
+      "min_rows": 1,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.995Z"
+}

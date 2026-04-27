@@ -1,0 +1,36 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/calendar/today",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/calendar/today",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "calendar",
+    "name": "today",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap) {\n\n    const events = await tap.eval(`\n      var cal = Application(\"Calendar\");\n      var now = new Date();\n      var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);\n      var end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);\n\n      var results = [];\n      var calendars = cal.calendars();\n      for (var c = 0; c < calendars.length; c++) {\n        var calName = String(calendars[c].name());\n        var evts = calendars[c].events.whose({\n          _and: [\n            { startDate: { _greaterThan: start } },\n            { startDate: { _lessThan: end } }\n          ]\n        })();\n        for (var i = 0; i < evts.length; i++) {\n          var e = evts[i];\n          var s = e.startDate();\n          var eEnd = e.endDate();\n          var hh = String(s.getHours()).padStart(2, \"0\");\n          var mm = String(s.getMinutes()).padStart(2, \"0\");\n          var ehh = String(eEnd.getHours()).padStart(2, \"0\");\n          var emm = String(eEnd.getMinutes()).padStart(2, \"0\");\n          results.push({\n            title: String(e.summary()),\n            time: hh + \":\" + mm + \"-\" + ehh + \":\" + emm,\n            location: String(e.location() || \"\"),\n            calendar: calName,\n            notes: String(e.description() || \"\").substring(0, 200),\n          });\n        }\n      }\n      results.sort(function(a, b) { return a.time < b.time ? -1 : 1; });\n      JSON.stringify(results);\n    `);\n\n    return events || [];\n  \n}"
+      }
+    ],
+    "description": "Today's calendar events",
+    "columns": [
+      "title",
+      "time",
+      "location",
+      "calendar",
+      "notes"
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.982Z"
+}

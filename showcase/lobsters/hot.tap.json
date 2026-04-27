@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/lobsters/hot",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/lobsters/hot",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "lobsters",
+    "name": "hot",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, _args) {\n\n    const data = await handle.fetch(\"https://lobste.rs/hottest.json\");\n    return data.map((t, i) => ({\n      rank: String(i + 1),\n      title: t.title,\n      score: String(t.score),\n      tags: t.tags.join(\", \"),\n      comments: String(t.comment_count),\n    }));\n  \n}"
+      }
+    ],
+    "description": "Lobsters hot posts",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.109Z"
+}

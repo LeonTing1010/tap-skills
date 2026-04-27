@@ -13,149 +13,55 @@ git clone https://github.com/<you>/tap-skills && cd tap-skills
 
 ## Adding a New Skill
 
-### 1. Choose the right format
+Tap skills are `.tap.json` files (W3C Annotation envelope wrapping an
+`ExecutionPlan`). Hand-authoring is rare — `tap forge` produces them
+directly from a URL or natural-language intent.
 
-| Format | When to use | Example |
-|--------|------------|---------|
-| **Extract** | Read-only data extraction (trending, search, feeds) | `github/trending` |
-| **Run** | Write actions, interactive flows, cross-tap composition | `x/post`, `daily/brief` |
+### 1. Forge it
 
-### 2. Create the file
+```bash
+tap forge "https://mysite.com/trending"
+# → showcase/mysite/hot.tap.json   (or community/, depending on placement)
+
+tap forge "post a comment on hackernews"
+# → produces a write-tap with intent:"write"
+```
+
+The forger picks the highest-quality source it can find:
+declared (Layer 1: agents.json / OpenAPI / JSON-LD / RSS / OpenGraph) →
+inferred API → ARIA → CSS. Layer 1 produces the most stable taps and
+costs zero LLM tokens. Layers 2+ require a Hacker license.
+
+### 2. (Or) hand-author from a template
+
+Copy any existing `.tap.json` in `showcase/` or `community/` as a
+template. The schema is `@taprun/spec/schemas/plan-v1.schema.json`
+(see `npm:@taprun/spec`). Path layout:
 
 ```
-site/name.tap.js
+showcase/<site>/<name>.tap.json     curated, sparse-checked-out by default
+community/<site>/<name>.tap.json    long tail, fetched via `tap update --all`
 ```
 
-- `site` = lowercase site or app name (e.g. `github`, `weibo`, `calendar`)
-- `name` = action name (e.g. `trending`, `hot`, `search`, `post`, `publish`)
+- `site` = lowercase site/app name (`github`, `weibo`, `calendar`)
+- `name` = action (`trending`, `hot`, `search`, `post`, `publish`)
 - One skill per file. One capability per skill.
+- Body must include `site`, `name`, `intent` (`read`|`write`),
+  `description`, and a non-empty `ops` array.
+- Read-only taps default to `intent:"read"` and run under doctor
+  automatically. `intent:"write"` skips doctor unless `--all`.
 
-### 3. Extract format template
+### 3. Strategy guidelines
 
-For read-only data extraction. The runtime handles navigation, waiting, limiting, and column inference.
-
-```js
-export default {
-  site: "mysite",
-  name: "hot",
-  description: "Trending posts on MySite",
-  url: "https://mysite.com/trending",
-  // Optional: wait for a specific element before extracting
-  // waitFor: ".post-item",
-  // Optional: custom timeout in ms (default: 30000)
-  // timeout: 10000,
-  // Optional: health check — CI can catch regressions
-  // health: { min_rows: 5, non_empty: ["title"] },
-
-  extract: () => {
-    return Array.from(document.querySelectorAll('.post-item')).map(el => ({
-      title: el.querySelector('h2')?.textContent?.trim() || '',
-      url: el.querySelector('a')?.href || '',
-      author: el.querySelector('.author')?.textContent?.trim() || ''
-    }))
-  }
-}
-```
-
-**Extract format rules:**
-- Must have `url` (string or function)
-- Must NOT have `columns` — runtime infers from return value
-- Must NOT have `args.limit` — runtime provides default (20)
-- Must NOT have `wait` — runtime uses adaptive retry
-- Prefer API over DOM: if the site has a JSON API, use `fetch()` instead of DOM selectors
-
-**API-first extract example:**
-
-```js
-export default {
-  site: "bilibili",
-  name: "hot",
-  description: "Bilibili trending videos",
-  url: "https://www.bilibili.com",
-  health: { min_rows: 5, non_empty: ["title"] },
-
-  extract: async () => {
-    const res = await fetch('https://api.bilibili.com/x/web-interface/ranking/v2',
-      { credentials: 'include' })
-    const data = await res.json()
-    return data.data.list.map(v => ({
-      title: v.title,
-      author: v.owner.name,
-      views: String(v.stat.view),
-      url: 'https://bilibili.com/video/' + v.bvid
-    }))
-  }
-}
-```
-
-### 4. Run format template
-
-For write actions, interactive flows, or taps that compose other taps.
-
-```js
-export default {
-  site: "mysite",
-  name: "post",
-  description: "Post content to MySite",
-  columns: ["status", "url"],
-  args: {
-    content: { type: "string", description: "Post content" },
-    // Optional args:
-    // title: { type: "string", optional: true },
-  },
-
-  async run(page, args) {
-    if (!args.content) throw new Error('content is required')
-
-    await page.nav('https://mysite.com/compose')
-    await page.type('.editor', args.content)
-    await page.click('.submit-btn')
-    await page.wait(2000)
-
-    const url = await page.eval(() => location.href)
-    return [{ status: 'posted', url }]
-  }
-}
-```
-
-**Run format rules:**
-- Must have `columns` (non-empty string array)
-- Must return array of objects matching declared columns
-- `args` types: `string`, `int`, `float`, `boolean`
-- No `chrome.*` APIs — use page API only
-
-### 5. Page API reference
-
-Available methods in `run(page, args)`:
-
-| Method | Purpose |
-|--------|---------|
-| `page.nav(url)` | Navigate to URL |
-| `page.click(selector)` | Click element |
-| `page.type(selector, text)` | Type into element |
-| `page.fill(selector, value)` | Set input value |
-| `page.eval(fn, ...args)` | Execute JS in page |
-| `page.fetch(url, options)` | Fetch with page cookies |
-| `page.find(selector)` | Find elements |
-| `page.wait(ms)` | Wait milliseconds |
-| `page.hover(selector)` | Hover element |
-| `page.scroll(direction, amount)` | Scroll page |
-| `page.pressKey(key)` | Press keyboard key |
-| `page.select(selector, value)` | Select dropdown option |
-| `page.upload(selector, path)` | Upload file |
-| `page.cookies()` | Get cookies |
-| `page.storage()` | Get localStorage |
-| `page.tap(site, name, args)` | Call another tap (composition) |
-
-### 6. Strategy guidelines
-
-**API first, DOM fallback.** This is the most important rule.
+**Declared > inferred > DOM.** This is the most important rule, and
+the forger applies it automatically. If you hand-author, follow the
+same order:
 
 ```
-Best:  fetch('https://api.site.com/v1/trending')     → structured JSON, fast, stable
-Good:  page.fetch('https://site.com/api/data')        → uses page cookies, same benefits
-OK:    document.querySelectorAll('.item')              → DOM extraction, breaks on redesign
-Last:  page.click() + page.type() + page.eval()       → interactive, most fragile
+Best:  declared L1 source — agents.json / OpenAPI / JSON-LD / RSS / OpenGraph
+Good:  inferred API — `op:fetch` against an authenticated JSON endpoint
+OK:    DOM extraction — `op:exec` querying `document.querySelectorAll(...)`
+Last:  interactive sequences — nav + click + type + eval (most fragile)
 ```
 
 How to find APIs:
@@ -173,14 +79,16 @@ node test/tap-format.test.mjs
 ```
 
 This checks:
+- No `.tap.js` files anywhere (hard gate, retired 2026-04-27)
+- File parses as a W3C Annotation with a `tap:ExecutionPlan` body
 - `site` and `name` match directory/filename
-- Exactly one of `extract()` or `run()`
-- Valid args types
-- Health contract validity
-- No `chrome.*` direct references
-- Extract format doesn't have `columns`, `args.limit`, or `wait`
-- Run format has `columns`
-- Composition references (`page.tap()`) resolve to existing taps
+- Non-empty `ops` array; every op has a string `op` field
+- Valid args types, health contract, semver `requires`
+- For `op:exec` source: no `chrome.*`, no `eval()` / `new Function()` /
+  `atob` / `WebSocket` / `XMLHttpRequest` / dynamic `import()`,
+  fetch URLs related to the declared site
+- Composition references (`handle.run("site","name")`) resolve to
+  existing taps in `showcase/` or `community/`
 
 ## Testing Your Skill
 
@@ -226,12 +134,14 @@ title           | url
 
 Sites change their DOM and APIs. When a skill breaks:
 
-1. Run the skill, note the error
-2. Open the site in Chrome, inspect what changed
-3. Update selectors or API endpoints
-4. Validate: `node test/tap-format.test.mjs`
-5. Test: `tap site name`
-6. Submit PR: `fix: site/name — updated selector for new layout`
+1. `tap doctor site/name` — note the drift report
+2. `tap heal site/name` (Pro) auto-patches via cache → minimal-patch →
+   full-rewrite. For free-tier or hand fixes: edit `ops` directly in
+   the `.tap.json`, or `tap forge` afresh and diff against the broken
+   version
+3. Validate: `node test/tap-format.test.mjs`
+4. Test: `tap site/name`
+5. Submit PR: `fix: site/name — updated <op> for new layout`
 
 ## Naming Conventions
 

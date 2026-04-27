@@ -1,0 +1,47 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/techcrunch/latest",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/techcrunch/latest",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "techcrunch",
+    "name": "latest",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = async (args) => {\n    const res = await fetch(\"/feed/\", { credentials: \"include\" })\n    const text = await res.text()\n    const parser = new DOMParser()\n    const doc = parser.parseFromString(text, \"text/xml\")\n    return Array.from(doc.querySelectorAll(\"item\")).map(item => {\n      const get = (tag) => item.querySelector(tag)?.textContent?.trim() || \"\"\n      const desc = get(\"description\").replace(/<[^>]+>/g, \"\").trim()\n      const cats = Array.from(item.querySelectorAll(\"category\")).map(c => c.textContent?.trim()).filter(Boolean)\n      return {\n        title: get(\"title\"),\n        author: item.getElementsByTagName(\"dc:creator\")[0]?.textContent?.trim() || \"\",\n        date: get(\"pubDate\"),\n        category: cats.slice(0, 3).join(\", \"),\n        link: get(\"link\"),\n        summary: desc.substring(0, 200),\n      }\n    }).filter(item => item.title)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "TechCrunch latest articles via RSS feed — zero DOM dependency",
+    "columns": [
+      "title",
+      "author",
+      "date",
+      "category",
+      "link",
+      "summary"
+    ],
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title",
+        "link"
+      ]
+    },
+    "examples": [
+      {}
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.112Z"
+}

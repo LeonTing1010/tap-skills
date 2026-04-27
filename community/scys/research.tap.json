@@ -1,0 +1,53 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/scys/research",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/scys/research",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "scys",
+    "name": "research",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const keyword = String(args.keyword || \"\")\n    if (!keyword) return [{ title: \"ERROR: keyword required\", feishu: \"\", url: \"\", badge: \"\", date: \"\", preview: \"\" }]\n    const limit = parseInt(args.limit || \"5\", 10)\n\n    // Step 1: 调用 search tap 获取搜索结果\n    const searchRows = await tap.run(\"scys\", \"search\", { keyword })\n\n    // 过滤掉 summary 行\n    const articles = searchRows.filter(r => r.badge !== \"summary\")\n    if (articles.length === 0) {\n      return [{ title: \"无搜索结果\", feishu: \"\", url: \"\", badge: \"\", date: \"\", preview: \"\" }]\n    }\n\n    // Step 2: 对 top N 篇调用 article tap 提取飞书链接\n    const results = []\n    const topN = articles.slice(0, limit)\n\n    for (const article of topN) {\n      const articleRows = await tap.run(\"scys\", \"article\", { url: article.url })\n      const feishuRow = articleRows.find(r => r.type === \"feishu_link\")\n\n      results.push({\n        title:   article.title,\n        feishu:  feishuRow ? feishuRow.content : \"\",\n        url:     article.url,\n        badge:   article.badge,\n        date:    article.date,\n        preview: article.preview\n      })\n    }\n\n    // 补充剩余结果（不提取飞书链接）\n    for (let i = limit; i < articles.length; i++) {\n      results.push({\n        title:   articles[i].title,\n        feishu:  \"\",\n        url:     articles[i].url,\n        badge:   articles[i].badge,\n        date:    articles[i].date,\n        preview: articles[i].preview\n      })\n    }\n\n    return results\n  \n}"
+      }
+    ],
+    "description": "Search SCYS and extract Feishu doc links (search + article)",
+    "columns": [
+      "title",
+      "feishu",
+      "url",
+      "badge",
+      "date",
+      "preview"
+    ],
+    "args": {
+      "keyword": {
+        "type": "string",
+        "description": "Search keyword"
+      },
+      "limit": {
+        "type": "int",
+        "description": "Number of articles to extract Feishu links from, default 5"
+      }
+    },
+    "health": {
+      "min_rows": 1,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.996Z"
+}

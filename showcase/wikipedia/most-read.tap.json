@@ -1,0 +1,29 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/wikipedia/most-read",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/wikipedia/most-read",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "wikipedia",
+    "name": "most-read",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = async (args) => {\n    const d = new Date()\n    const y = d.getFullYear()\n    const m = d.getMonth() + 1\n    const day = d.getDate() - 1\n    const url = `https://en.wikipedia.org/api/rest_v1/feed/featured/${y}/${String(m).padStart(2, '0')}/${String(day).padStart(2, '0')}`\n    const res = await fetch(url)\n    const data = await res.json()\n    return (data.mostread?.articles || []).map(a => ({\n      title: String(a.titles?.normalized || a.title),\n      description: String(a.description || '-'),\n      views: String(a.views || 0)\n    }))\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Wikipedia most read articles today"
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.114Z"
+}

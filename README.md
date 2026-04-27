@@ -20,7 +20,7 @@
 
 ---
 
-Community skills for [Tap](https://github.com/LeonTing1010/tap). Every `.tap.js` file is a deterministic program that runs forever at $0.
+Community skills for [Tap](https://github.com/LeonTing1010/tap). Every `.tap.json` file is a deterministic program that runs forever at $0.
 
 ## Install & Usage
 
@@ -219,9 +219,9 @@ tap github trending                               # Run any skill
 
 ```bash
 git clone https://github.com/<you>/tap-skills && cd tap-skills
-mkdir -p mysite && vi mysite/hot.tap.js
-tap mysite hot   # Test it
-# Submit PR
+tap forge "https://mysite.com/trending"   # produces showcase/mysite/hot.tap.json
+tap mysite/hot                            # test it
+# Submit PR — see CONTRIBUTING.md
 ```
 
 Every contribution is welcome — from fixing a selector to adding a new site.

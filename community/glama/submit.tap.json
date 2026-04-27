@@ -1,0 +1,43 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/glama/submit",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/glama/submit",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "glama",
+    "name": "submit",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    if (!args.repoUrl) throw new Error('repoUrl is required')\n\n    await tap.nav('https://glama.ai/mcp/servers')\n    await tap.wait(3000)\n\n    // Click Add Server button\n    await tap.eval(() => {\n      const btn = [...document.querySelectorAll('button')].find(b => b.textContent.includes('Add Server'));\n      if (btn) btn.click();\n    })\n    await tap.wait(1000)\n\n    // Fill the dialog form via native setters (CSP may block scripting)\n    await tap.eval((name, repoUrl) => {\n      function setInput(id, val) {\n        const el = document.getElementById(id);\n        if (!el || !val) return;\n        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;\n        setter.call(el, val);\n        el.dispatchEvent(new Event('input', { bubbles: true }));\n        el.dispatchEvent(new Event('change', { bubbles: true }));\n      }\n      // Glama uses dynamic IDs — find by placeholder instead\n      const inputs = document.querySelectorAll('input');\n      for (const input of inputs) {\n        if (input.placeholder?.includes('github.com')) {\n          const s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;\n          s.call(input, repoUrl);\n          input.dispatchEvent(new Event('input', { bubbles: true }));\n          input.dispatchEvent(new Event('change', { bubbles: true }));\n        }\n        if (input.placeholder?.includes('My MCP Server') && name) {\n          const s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;\n          s.call(input, name);\n          input.dispatchEvent(new Event('input', { bubbles: true }));\n          input.dispatchEvent(new Event('change', { bubbles: true }));\n        }\n      }\n    }, args.name, args.repoUrl)\n    await tap.wait(500)\n\n    // Click Submit for Review\n    await tap.eval(() => {\n      const btn = [...document.querySelectorAll('button[type=\"submit\"]')].find(b => b.textContent.includes('Submit'));\n      if (btn) btn.click();\n    })\n    await tap.wait(3000)\n\n    const url = await tap.eval(() => location.href)\n    return [{ status: 'submitted', url: String(url) }]\n  \n}"
+      }
+    ],
+    "description": "Submit an MCP server to Glama directory",
+    "columns": [
+      "status",
+      "url"
+    ],
+    "args": {
+      "name": {
+        "type": "string",
+        "description": "Server name (e.g. 'Tap')"
+      },
+      "repoUrl": {
+        "type": "string",
+        "description": "GitHub repository URL"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.983Z"
+}
