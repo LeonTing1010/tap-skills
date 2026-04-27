@@ -1,0 +1,50 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/macos/scroll-capture",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/macos/scroll-capture",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "macos",
+    "name": "scroll-capture",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const maxScreens = Math.min(Math.max(args.screens || 1, 1), 3);\n    const header = args.header || 0;\n\n    // Activate app if specified\n    if (args.app) {\n      await tap.eval(`Application(${JSON.stringify(args.app)}).activate();`);\n      await tap.wait(500);\n    }\n\n    // Get frontmost window geometry\n    const win = await tap.eval(`\n      var se = Application(\"System Events\");\n      var front = se.applicationProcesses.whose({frontmost: true})[0];\n      var w = front.windows[0];\n      var p = w.position(), s = w.size();\n      JSON.stringify({ app: String(front.name()), title: String(w.name()), x: p[0], y: p[1], w: s[0], h: s[1] });\n    `);\n    if (!win) throw new Error(\"No frontmost window\");\n\n    // Scroll geometry: one viewport minus header, 85% to avoid missing content\n    const contentH = win.h - header;\n    const scrollPx = Math.round(contentH * 0.85);\n    const scrollX = Math.round(win.x + win.w * 0.5);\n    const scrollY = Math.round(win.y + header + contentH * 0.5);\n\n    const results = [];\n    for (let i = 0; i < maxScreens; i++) {\n      if (i > 0) {\n        // Pixel-precise scroll: unit=1 (kCGScrollEventUnitPixel)\n        await tap.eval(`\n          ObjC.import('CoreGraphics');\n          var e = $.CGEventCreateScrollWheelEvent(null, 1, 1, ${-scrollPx});\n          $.CGEventSetLocation(e, $.CGPointMake(${scrollX}, ${scrollY}));\n          $.CGEventPost($.kCGHIDEventTap, e);\n        `);\n        await tap.wait(1500);\n      }\n\n      const shot = await tap.screenshot();\n      const file = `/tmp/scroll-capture-${i + 1}.png`;\n      results.push({ screen: String(i + 1), file });\n    }\n\n    return results;\n  \n}"
+      }
+    ],
+    "description": "Scrolling screenshots of frontmost macOS app (pixel-precise, max 3 screens)",
+    "columns": [
+      "screen",
+      "file"
+    ],
+    "args": {
+      "screens": {
+        "type": "int",
+        "default": 1,
+        "description": "Number of screens to capture (1-3)"
+      },
+      "header": {
+        "type": "int",
+        "default": 0,
+        "description": "Fixed header px to skip when scrolling"
+      },
+      "app": {
+        "type": "string",
+        "default": "",
+        "description": "App to activate (empty = frontmost)"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.979Z"
+}

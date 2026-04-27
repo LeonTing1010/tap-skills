@@ -1,0 +1,49 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/scys/search",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/scys/search",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "scys",
+    "name": "search",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const keyword = String(args.keyword || \"\")\n    if (!keyword) return [{ title: \"ERROR: keyword required\", author: \"\", url: \"\", badge: \"\", date: \"\", preview: \"\" }]\n\n    // 1. 打开首页\n    await tap.nav(\"https://scys.com\")\n    await tap.wait(2000)\n\n    // 2. 输入关键词\n    await tap.type('input[placeholder=\"搜索内容、用户、航海...\"]', keyword)\n    await tap.wait(500)\n\n    // 3. 通过 eval 触发搜索（多种方式尝试）\n    await tap.eval(() => {\n      // 方式1: 找到 Vue 组件实例，直接调用搜索方法\n      var allEls = document.querySelectorAll('*')\n      var vueApp = null\n      for (var i = 0; i < allEls.length; i++) {\n        var keys = Object.keys(allEls[i])\n        for (var j = 0; j < keys.length; j++) {\n          if (keys[j].indexOf('__vue_app__') === 0) { vueApp = allEls[i][keys[j]]; break }\n        }\n        if (vueApp) break\n      }\n      if (vueApp) {\n        var root = vueApp._instance\n        if (root && root.subTree && root.subTree.component) {\n          var comp = root.subTree.component\n          function findSearchComp(c, depth) {\n            if (!c || depth > 20) return null\n            if (c.exposed && c.exposed.search) return c.exposed\n            if (c.ctx && typeof c.ctx.search === 'function') return c.ctx\n            if (c.setupState && typeof c.setupState.search === 'function') return c.setupState\n            if (c.subTree && c.subTree.component) {\n              var found = findSearchComp(c.subTree.component, depth + 1)\n              if (found) return found\n            }\n            if (c.subTree && c.subTree.children) {\n              for (var k = 0; k < c.subTree.children.length; k++) {\n                var child = c.subTree.children[k]\n                if (child && child.component) {\n                  found = findSearchComp(child.component, depth + 1)\n                  if (found) return found\n                }\n              }\n            }\n            return null\n          }\n          var searchCtx = findSearchComp(comp, 0)\n          if (searchCtx && searchCtx.search) {\n            searchCtx.search()\n            return 'called vue search method'\n          }\n        }\n      }\n      // 方式2: 点击搜索图标\n      var svg = document.querySelector('svg.search-icon')\n      if (svg) {\n        svg.dispatchEvent(new MouseEvent('click', { bubbles: true }))\n        return 'clicked svg search-icon'\n      }\n      // 方式3: 提交表单\n      var form = document.querySelector('form.search-input')\n      if (form) {\n        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))\n        return 'submitted form'\n      }\n      return 'no search trigger found'\n    })\n    await tap.wait(4000)\n\n    // 4. 轮询等待数据加载完成，然后从 Pinia store 提取\n    return await tap.eval(() => {\n      var allEls = document.querySelectorAll('*')\n      var vueApp = null\n      for (var i = 0; i < allEls.length; i++) {\n        var keys = Object.keys(allEls[i])\n        for (var j = 0; j < keys.length; j++) {\n          if (keys[j].indexOf('__vue_app__') === 0) { vueApp = allEls[i][keys[j]]; break }\n        }\n        if (vueApp) break\n      }\n      if (!vueApp) return [{ title: 'ERROR: Vue app not found', author: '', url: '', badge: '', date: '', preview: '' }]\n\n      var provides = vueApp._context.provides\n      var symbols = Object.getOwnPropertySymbols(provides)\n      var pinia = null\n      for (var s = 0; s < symbols.length; s++) {\n        if (provides[symbols[s]] && provides[symbols[s]]._s) { pinia = provides[symbols[s]]; break }\n      }\n      if (!pinia) return [{ title: 'ERROR: Pinia not found', author: '', url: '', badge: '', date: '', preview: '' }]\n\n      var store = pinia._s.get('searchContentStore')\n      if (!store) return [{ title: 'ERROR: store not found', author: '', url: '', badge: '', date: '', preview: '' }]\n\n      // 轮询等待数据加载（最多等10秒，每500ms检查一次）\n      var startTime = Date.now()\n      while (Date.now() - startTime < 10000) {\n        if (store.postList && store.postList.length > 0) break\n        // 同步阻塞等待\n        var end = Date.now() + 500\n        while (Date.now() < end) { /* busy wait */ }\n      }\n\n      var postList = store.postList || []\n      var total = store.total || 0\n      var scenes = store.pageSceneList || []\n\n      var summary = {\n        title: '共' + total + '条',\n        author: '', url: '', badge: 'summary', date: '',\n        preview: scenes.map(function(s) { return s.name + '(' + s.count + ')' }).join(' ')\n      }\n\n      var rows = postList.map(function(p) {\n        return {\n          title:   (p.showTitle || p.title || '').replace(/<[^>]+>/g, ''),\n          author:  p.authorName || p.nickName || '',\n          url:     'https://scys.com/articleDetail/' + (p.entityType || 'xq_topic') + '/' + (p.topicId || ''),\n          badge:   p.isDigested ? '精华' : '',\n          date:    p.createDate || '',\n          preview: (p.content || '').replace(/<[^>]+>/g, '').substring(0, 200)\n        }\n      })\n\n      rows.unshift(summary)\n      return rows\n    })\n  \n}"
+      }
+    ],
+    "description": "Search SCYS by keyword (requires login)",
+    "columns": [
+      "title",
+      "author",
+      "url",
+      "badge",
+      "date",
+      "preview"
+    ],
+    "args": {
+      "keyword": {
+        "type": "string",
+        "description": "搜索关键词"
+      }
+    },
+    "health": {
+      "min_rows": 1,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.994Z"
+}

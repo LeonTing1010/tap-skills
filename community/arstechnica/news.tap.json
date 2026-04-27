@@ -1,0 +1,45 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/arstechnica/news",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/arstechnica/news",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "arstechnica",
+    "name": "news",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    const seen = new Set()\n    const items = []\n    document.querySelectorAll('article').forEach(el => {\n      const titleEl = el.querySelector('h2 a') || el.querySelector('h2')\n      const title = titleEl?.textContent?.trim() || ''\n      if (!title || title.length < 10 || seen.has(title)) return\n      seen.add(title)\n      const link = el.querySelector('h2 a')?.href || el.querySelector('a')?.href || ''\n      if (!link || !link.includes('arstechnica.com/')) return\n      const byline = el.querySelector('div.font-impact')\n      const author = byline?.querySelector('span:not([class])')?.textContent?.trim() || ''\n      const comments = el.querySelector('a.view-comments')?.textContent?.trim()?.replace(/[^\\d]/g, '') || '0'\n      items.push({ title: String(title), author: String(author), comments: String(comments), link: String(link) })\n    })\n    return items.slice(0, 30)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Ars Technica latest tech news and articles",
+    "columns": [
+      "title",
+      "author",
+      "comments",
+      "link"
+    ],
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title",
+        "link"
+      ]
+    },
+    "examples": [
+      {}
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.988Z"
+}

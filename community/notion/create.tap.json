@@ -1,0 +1,42 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/notion/create",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/notion/create",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "notion",
+    "name": "create",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    if (!args.title) {\n      return [{ status: \"error\", url: \"missing title arg\" }]\n    }\n\n    await tap.nav(\"https://www.notion.so\")\n    await tap.wait(2000)\n\n    // Create new page via keyboard shortcut\n    await tap.pressKey(\"n\", 8) // Cmd+N (meta=8)\n    await tap.wait(2000)\n\n    // Type title\n    await tap.type('[placeholder=\"Untitled\"], .notion-title-input, [contenteditable]', args.title)\n    await tap.pressKey(\"Enter\")\n    await tap.wait(500)\n\n    // Type content if provided\n    if (args.content) {\n      await tap.type('[data-content-editable-leaf], [placeholder=\"Type\"], [contenteditable]', args.content)\n      await tap.wait(500)\n    }\n\n    await tap.wait(1000)\n    const url = await tap.eval(() => location.href)\n\n    return [{ status: \"created\", url }]\n  \n}"
+      }
+    ],
+    "description": "Create a new page in Notion",
+    "columns": [
+      "status",
+      "url"
+    ],
+    "args": {
+      "title": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string",
+        "default": ""
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.001Z"
+}

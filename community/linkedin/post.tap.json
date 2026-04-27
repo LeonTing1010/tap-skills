@@ -1,0 +1,38 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/linkedin/post",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/linkedin/post",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "linkedin",
+    "name": "post",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    if (!args.content) {\n      return [{ status: \"error\", url: \"missing content arg\" }]\n    }\n\n    await tap.nav(\"https://www.linkedin.com/feed/\")\n    await tap.wait(2000)\n\n    // Click \"Start a post\" button\n    await tap.click(\"Start a post\")\n    await tap.wait(2000)\n\n    // Type into the post editor\n    await tap.type('[role=\"textbox\"], .ql-editor, [contenteditable=\"true\"]', args.content)\n    await tap.wait(1000)\n\n    // Click Post button\n    await tap.click(\"Post\")\n    await tap.wait(3000)\n\n    const url = await tap.eval(() => location.href)\n    return [{ status: \"posted\", url }]\n  \n}"
+      }
+    ],
+    "description": "Post to LinkedIn feed",
+    "columns": [
+      "status",
+      "url"
+    ],
+    "args": {
+      "content": {
+        "type": "string"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.015Z"
+}

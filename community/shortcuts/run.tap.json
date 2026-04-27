@@ -1,0 +1,44 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/shortcuts/run",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/shortcuts/run",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "shortcuts",
+    "name": "run",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n    // Use tap.eval to call shortcuts CLI via JXA doShellScript.\n    // Shell args are single-quoted with internal quotes escaped to prevent injection.\n    const esc = (s) => \"'\" + String(s).replace(/'/g, \"'\\\\''\") + \"'\";\n    const name = esc(args.name);\n    const input = args.input ? esc(args.input) : \"\";\n\n    const cmd = input\n      ? `shortcuts run ${name} --input-type text --input ${input}`\n      : `shortcuts run ${name}`;\n\n    const result = await tap.eval(`\n      var app = Application.currentApplication();\n      app.includeStandardAdditions = true;\n      try {\n        var out = app.doShellScript(${JSON.stringify(cmd)});\n        JSON.stringify({ output: String(out) });\n      } catch(e) {\n        JSON.stringify({ error: String(e) });\n      }\n    `);\n\n    if (result?.error) throw new Error(`Shortcut \"${args.name}\": ${result.error}`);\n    return [{ output: result?.output || \"\" }];\n  }"
+      }
+    ],
+    "description": "Run an Apple Shortcut",
+    "columns": [
+      "output"
+    ],
+    "args": {
+      "name": {
+        "type": "string",
+        "required": true,
+        "description": "Shortcut name"
+      },
+      "input": {
+        "type": "string",
+        "default": "",
+        "description": "Input text (optional)"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1-fallback"
+  },
+  "created": "2026-04-27T00:00:00Z"
+}

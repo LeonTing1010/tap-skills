@@ -1,0 +1,44 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/v2ex/post",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/v2ex/post",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "v2ex",
+    "name": "post",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    if (!args.title || !args.content || !args.node) {\n      return [{ status: \"error\", url: \"missing title, content, or node\" }]\n    }\n\n    // Try API first\n    try {\n      const token = await tap.eval(() => {\n        const cookies = document.cookie.split(\";\").map(c => c.trim())\n        // V2EX uses a once token for CSRF, try to get it\n        return null\n      })\n    } catch (_) {}\n\n    // V2EX new topic form\n    await tap.nav(`https://www.v2ex.com/new/${args.node}`)\n    await tap.wait(2000)\n\n    // Check if logged in (V2EX redirects to login if not)\n    const onPage = await tap.eval(() => location.pathname)\n    if (onPage.includes(\"/signin\")) {\n      return [{ status: \"error\", url: \"not logged in - please sign in to V2EX first\" }]\n    }\n\n    // Fill in title\n    await tap.click('input[name=\"title\"], #topic_title')\n    await tap.wait(300)\n    await tap.type('input[name=\"title\"], #topic_title', args.title)\n    await tap.wait(500)\n\n    // Fill in content\n    await tap.click('textarea[name=\"content\"], #topic_content, textarea.topic_content')\n    await tap.wait(300)\n    await tap.type('textarea[name=\"content\"], #topic_content, textarea.topic_content', args.content)\n    await tap.wait(500)\n\n    // Submit\n    await tap.click('input[type=\"submit\"], button[type=\"submit\"]')\n    await tap.wait(3000)\n\n    const url = await tap.eval(() => location.href)\n    const posted = url.includes(\"/t/\")\n\n    return [{\n      status: posted ? \"posted\" : \"check-browser\",\n      url\n    }]\n  \n}"
+      }
+    ],
+    "description": "Post a topic on V2EX",
+    "columns": [
+      "status",
+      "url"
+    ],
+    "args": {
+      "title": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      },
+      "node": {
+        "type": "string"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.989Z"
+}

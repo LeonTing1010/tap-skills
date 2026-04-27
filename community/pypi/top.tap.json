@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/pypi/top",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/pypi/top",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "pypi",
+    "name": "top",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap) {\n\n    const data = await tap.fetch(\n      \"https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json\",\n    )\n    return data.rows.slice(0, 50).map(item => ({\n      project: item.project,\n      download_count: String(item.download_count),\n    }))\n  \n}"
+      }
+    ],
+    "description": "PyPI top Python packages by downloads (last 30 days)",
+    "health": {
+      "min_rows": 10,
+      "non_empty": [
+        "project"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.975Z"
+}

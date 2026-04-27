@@ -1,0 +1,46 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/devto/publish",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/devto/publish",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "devto",
+    "name": "publish",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    if (!args.title || !args.content) {\n      return [{ status: \"error\", url: \"missing title or content\" }]\n    }\n\n    await tap.nav(\"https://dev.to/new\")\n    await tap.wait(3000)\n\n    // Type title\n    await tap.click('#article-form-title')\n    await tap.wait(300)\n    await tap.type('#article-form-title', args.title)\n    await tap.wait(500)\n\n    // Add tags if provided\n    if (args.tags) {\n      await tap.click('#tag-input')\n      await tap.wait(300)\n      await tap.type('#tag-input', args.tags)\n      await tap.wait(500)\n    }\n\n    // Set body content via native setter (type() times out on long text)\n    await tap.click('#article_body_markdown')\n    await tap.wait(300)\n    const bodySet = await tap.eval(`(() => {\n      const ta = document.getElementById('article_body_markdown');\n      if (!ta) return false;\n      const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;\n      setter.call(ta, ${JSON.stringify(args.content)});\n      ta.dispatchEvent(new Event('input', { bubbles: true }));\n      return true;\n    })()`)\n\n    if (!bodySet) {\n      return [{ status: \"error\", url: \"could not set body content\" }]\n    }\n    await tap.wait(1000)\n\n    // Click Publish\n    const published = await tap.eval(`(() => {\n      const btn = Array.from(document.querySelectorAll('button')).find(b =>\n        b.textContent?.trim() === 'Publish' && b.className.includes('c-btn--primary')\n      );\n      if (btn) { btn.click(); return true; }\n      return false;\n    })()`)\n\n    await tap.wait(5000)\n    const url = await tap.eval(() => location.href)\n\n    return [{\n      status: !url.includes('/new') ? \"published\" : \"check-browser\",\n      url\n    }]\n  \n}"
+      }
+    ],
+    "description": "Publish an article on Dev.to",
+    "columns": [
+      "status",
+      "url"
+    ],
+    "args": {
+      "title": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string",
+        "description": "Markdown content"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Comma-separated tags, up to 4 (optional)"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.105Z"
+}

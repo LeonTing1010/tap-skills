@@ -1,0 +1,51 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/juejin/post",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/juejin/post",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "juejin",
+    "name": "post",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    if (!args.title || !args.body) throw new Error('title and body are required')\n\n    await tap.nav('https://juejin.cn/editor/drafts/new?v=2')\n    await tap.wait(2000)\n\n    // Fill title\n    await tap.type('.title-input input, input[placeholder*=\"标题\"]', args.title)\n    await tap.wait(300)\n\n    // Fill body — bytemd markdown editor (CodeMirror)\n    await tap.click('.bytemd-editor .CodeMirror, .CodeMirror-code, .bytemd-body')\n    await tap.wait(300)\n    await tap.type('.bytemd-editor .CodeMirror textarea, .CodeMirror textarea', args.body)\n    await tap.wait(500)\n\n    // Click publish button to open publish dialog\n    await tap.click('发布')\n    await tap.wait(1000)\n\n    // Select category if provided\n    if (args.category) {\n      await tap.click(args.category)\n      await tap.wait(300)\n    }\n\n    // Add tags if provided\n    if (args.tags) {\n      const tags = args.tags.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3)\n      for (const tag of tags) {\n        const tagInput = '[placeholder*=\"标签\"], [placeholder*=\"搜索添加标签\"]'\n        await tap.type(tagInput, tag)\n        await tap.wait(500)\n        await tap.pressKey('Enter')\n        await tap.wait(300)\n      }\n    }\n\n    // Confirm publish\n    await tap.click('确定并发布')\n    await tap.wait(5000)\n\n    const url = await tap.eval(() => location.href)\n    const published = url.includes('/post/') && !url.includes('/editor/')\n\n    return [{\n      status: published ? 'published' : 'check-browser',\n      url: String(url)\n    }]\n  \n}"
+      }
+    ],
+    "description": "Publish article on Juejin",
+    "columns": [
+      "status",
+      "url"
+    ],
+    "args": {
+      "title": {
+        "type": "string",
+        "description": "Article title"
+      },
+      "body": {
+        "type": "string",
+        "description": "Article body (Markdown)"
+      },
+      "category": {
+        "type": "string",
+        "description": "Category: Frontend/Backend/Android/iOS/AI/Tools"
+      },
+      "tags": {
+        "type": "string",
+        "description": "Comma-separated tags (max 3)"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.002Z"
+}

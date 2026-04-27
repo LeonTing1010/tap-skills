@@ -1,0 +1,41 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/google/trends",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/google/trends",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "google",
+    "name": "trends",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n    // Google Trends daily trends API (unofficial but stable)\n    const tz = new Date().getTimezoneOffset()\n    const url =\n      \"https://trends.google.com/trends/api/dailytrends?hl=en-US&tz=\" +\n      tz + \"&geo=\" + (args.geo || \"US\") + \"&ns=15\"\n    const text = await tap.fetch(url, { responseType: \"text\" })\n    // Response starts with \")]}',\\n\" — strip it\n    const json = JSON.parse(String(text).replace(/^\\)\\]\\}',\\n/, \"\"))\n    const trendingStories =\n      json?.default?.trendingSearchesDays?.[0]?.trendingSearches || []\n    return trendingStories.map((item, i) => ({\n      rank: String(i + 1),\n      title: item.title?.query || \"\",\n      hot: String(item.formattedTraffic || \"0\"),\n      articles: String((item.articles || []).length),\n    }))\n  }"
+      }
+    ],
+    "description": "Google Trends daily trending searches",
+    "args": {
+      "geo": {
+        "type": "string",
+        "default": "US"
+      }
+    },
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1-fallback"
+  },
+  "created": "2026-04-27T00:00:00Z"
+}

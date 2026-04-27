@@ -1,31 +1,23 @@
 /**
- * Constraint: tap format contract (v0.9+)
+ * Constraint: tap format contract (.tap.json single source of truth)
  * Classification: safety / what — invalid format = runtime crash
  *
- * Two accepted shapes:
- *
- *   .tap.js (legacy ES module):
- *     export default {
- *       site, name, description,
- *       intent: "read" | "write",   // optional, default "read"
- *       columns: ["..."],           // required
- *       health: { min_rows, non_empty },
- *       examples: [{...}],
- *       async tap(handle, args) { ... }
+ * Single accepted shape: .tap.json (W3C Annotation / ExecutionPlan):
+ *   {
+ *     "@context": [...anno.jsonld, ...tap-v1],
+ *     "type": "Annotation",
+ *     "motivation": "tap:executing",
+ *     "body": {
+ *       "type": "tap:ExecutionPlan",
+ *       "site", "name", "intent", "description",
+ *       "columns": [...], "args": {...}, "health": {...},
+ *       "ops": [...]   // native ops (filter/sort/dedupe/...) and/or {op:"exec", fn:"..."}
  *     }
+ *   }
  *
- *   .tap.json (W3C Annotation / ExecutionPlan — canonical):
- *     {
- *       "@context": [...anno.jsonld, ...tap-v1],
- *       "type": "Annotation",
- *       "motivation": "tap:executing",
- *       "body": {
- *         "type": "tap:ExecutionPlan",
- *         "site", "name", "intent", "description",
- *         "columns": [...], "args": {...}, "health": {...},
- *         "ops": [{ "op": "exec", "fn": "async function(tap, args) { ... }" }]
- *       }
- *     }
+ * `.tap.js` retired 2026-04-27 (PR #16 policy). The hard gate below
+ * fails CI if any .tap.js sneaks back in. See CONTRIBUTING.md for the
+ * `.tap.json`-only contribution flow (`tap forge` produces it directly).
  *
  * Run: node test/tap-format.test.mjs
  */
@@ -34,10 +26,9 @@ import { strict as assert } from 'node:assert'
 import { readdir, readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, basename } from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 const TAPS_DIR = new URL('../', import.meta.url).pathname
-const VALID_ARG_TYPES = ['string', 'int', 'float', 'number', 'boolean']
+const VALID_ARG_TYPES = ['string', 'int', 'float', 'number', 'boolean', 'object', 'array']
 const VALID_INTENTS = ['read', 'write']
 
 let passed = 0
@@ -70,12 +61,11 @@ async function testAsync(tapId, rule, fn) {
   }
 }
 
-// Repo layout (since #9): tier subdirs (showcase/, community/) hold sites.
-// Walk each tier and discover {site}/{name}.tap.js files inside.
 const TIERS = ['showcase', 'community']
 
 async function findTapFiles(rootDir) {
   const files = []
+  const stragglers = []
   for (const tier of TIERS) {
     const tierPath = join(rootDir, tier)
     if (!existsSync(tierPath)) continue
@@ -84,18 +74,11 @@ async function findTapFiles(rootDir) {
       try {
         for (const file of await readdir(sitePath)) {
           if (file.endsWith('.tap.js')) {
-            files.push({
-              tier,
-              site,
-              kind: 'js',
-              name: basename(file, '.tap.js'),
-              path: join(sitePath, file),
-            })
+            stragglers.push(join(tier, site, file))
           } else if (file.endsWith('.tap.json')) {
             files.push({
               tier,
               site,
-              kind: 'json',
               name: basename(file, '.tap.json'),
               path: join(sitePath, file),
             })
@@ -104,12 +87,11 @@ async function findTapFiles(rootDir) {
       } catch { /* not a directory */ }
     }
   }
-  return files
+  return { files, stragglers }
 }
 
-// Normalize a .tap.json (W3C Annotation/ExecutionPlan) into the same shape
-// as a .tap.js default export, so the downstream constraint checks
-// apply uniformly.
+/** Parse a .tap.json into a normalized shape for downstream constraints.
+ *  Returns null and records a failure if the file is malformed. */
 async function loadJsonTap(path) {
   const raw = await readFile(path, 'utf8')
   let plan
@@ -120,14 +102,17 @@ async function loadJsonTap(path) {
   assert(body && typeof body === 'object', 'missing body')
   assert(body.type === 'tap:ExecutionPlan', `body.type must be "tap:ExecutionPlan", got "${body.type}"`)
   assert(Array.isArray(body.ops) && body.ops.length > 0, 'body.ops must be non-empty array')
+  for (const o of body.ops) {
+    assert(o && typeof o === 'object' && typeof o.op === 'string',
+      `every op needs a string "op" field, got ${JSON.stringify(o).slice(0, 60)}`)
+  }
 
-  // Concat all exec ops' fn sources so security checks see everything.
-  const execOps = body.ops.filter((o) => o?.op === 'exec' && typeof o.fn === 'string')
-  assert(execOps.length > 0, 'body.ops must contain at least one {op:"exec", fn:"..."}')
-  const tapSource = execOps.map((o) => o.fn).join('\n\n')
-
-  // Fake a function object so tap.toString() returns the source string.
-  const fakeTap = { toString: () => tapSource }
+  // Concat all exec ops' fn sources for source-level security checks.
+  // Plans with zero exec ops (native-op pipelines) skip source checks.
+  const execSrc = body.ops
+    .filter((o) => o.op === 'exec' && typeof o.fn === 'string')
+    .map((o) => o.fn)
+    .join('\n\n')
 
   return {
     site: body.site,
@@ -138,38 +123,33 @@ async function loadJsonTap(path) {
     args: body.args,
     health: body.health,
     requires: body.requires,
-    tap: fakeTap,
+    ops: body.ops,
+    execSrc, // empty string if no exec ops
   }
 }
 
-console.log('\ntap format constraints (.tap.js + .tap.json, v0.9+ unified shape)\n')
+console.log('\ntap format constraints (.tap.json single source of truth)\n')
 
-const tapFiles = await findTapFiles(TAPS_DIR)
+const { files: tapFiles, stragglers } = await findTapFiles(TAPS_DIR)
 
-test('global', 'at least one tap file exists', () => {
-  assert(tapFiles.length > 0, `no .tap.js / .tap.json files found in ${TAPS_DIR}`)
+test('global', '.tap.js retired — no .tap.js files may exist under showcase/ or community/', () => {
+  assert.equal(stragglers.length, 0,
+    `found legacy .tap.js files (delete them):\n    ${stragglers.join('\n    ')}`)
 })
 
-for (const { site, name, kind, path } of tapFiles) {
+test('global', 'at least one .tap.json file exists', () => {
+  assert(tapFiles.length > 0, `no .tap.json files found in ${TAPS_DIR}`)
+})
+
+for (const { site, name, path } of tapFiles) {
   const id = `${site}/${name}`
-  const ext = kind === 'json' ? '.tap.json' : '.tap.js'
-  console.log(`\n  ${id}${ext}`)
+  console.log(`\n  ${id}.tap.json`)
 
   let tap
-  if (kind === 'js') {
-    let mod
-    await testAsync(id, `loads as ES module`, async () => {
-      mod = await import(pathToFileURL(path))
-      assert(mod.default, 'must have default export')
-    })
-    if (!mod?.default) continue
-    tap = mod.default
-  } else {
-    await testAsync(id, `parses as W3C Annotation plan`, async () => {
-      tap = await loadJsonTap(path)
-    })
-    if (!tap) continue
-  }
+  await testAsync(id, `parses as W3C Annotation plan`, async () => {
+    tap = await loadJsonTap(path)
+  })
+  if (!tap) continue
 
   // ===== STRUCTURE =====
 
@@ -192,17 +172,6 @@ for (const { site, name, kind, path } of tapFiles) {
   test(id, `name matches filename (${tap.name} === ${name})`, () => {
     assert.equal(tap.name, name)
   })
-
-  test(id, `has tap entry (function or exec op)`, () => {
-    if (kind === 'js') {
-      assert.equal(typeof tap.tap, 'function',
-        'must define `async tap(handle, args) { ... }` — single entry point')
-    } else {
-      assert(tap.tap, 'must have at least one exec op in body.ops[]')
-    }
-  })
-
-  if (!tap.tap) continue
 
   // ===== INTENT =====
 
@@ -252,67 +221,6 @@ for (const { site, name, kind, path } of tapFiles) {
     })
   }
 
-  // ===== SOURCE-LEVEL CHECKS =====
-
-  const src = tap.tap.toString()
-
-  test(id, `tap() body does not reference chrome.* directly`, () => {
-    assert(!src.includes('chrome.tabs'), 'must not reference chrome.tabs — use handle API')
-    assert(!src.includes('chrome.scripting'), 'must not reference chrome.scripting — use handle API')
-    assert(!src.includes('chrome.debugger'), 'must not reference chrome.debugger — use handle API')
-  })
-
-  // ===== SECURITY =====
-
-  test(id, `[security] no eval() — use handle.eval() instead`, () => {
-    const lines = src.split('\n')
-    for (const line of lines) {
-      if (line.trimStart().startsWith('//')) continue
-      if (/\beval\s*\(/.test(line) && !line.includes('handle.eval') && !line.includes('tap.eval') && !line.includes('page.eval')) {
-        assert.fail(`eval() found — use handle.eval() for page-context execution`)
-      }
-    }
-  })
-
-  test(id, `[security] no new Function()`, () => {
-    assert(!/new\s+Function\s*\(/.test(src), 'new Function() not allowed — logic must be in tap source')
-  })
-
-  test(id, `[security] no base64 decoding (atob)`, () => {
-    assert(!/\batob\s*\(/.test(src), 'atob() not allowed — tap code must be readable')
-  })
-
-  test(id, `[security] no WebSocket`, () => {
-    assert(!/new\s+WebSocket\s*\(/.test(src), 'WebSocket not allowed — use handle.fetch()')
-  })
-
-  test(id, `[security] no XMLHttpRequest`, () => {
-    assert(!/XMLHttpRequest/.test(src), 'XMLHttpRequest not allowed — use handle.fetch()')
-  })
-
-  test(id, `[security] no dynamic import()`, () => {
-    const lines = src.split('\n')
-    for (const line of lines) {
-      if (/\bimport\s*\(/.test(line) && !/export\s+default/.test(line) && !/ObjC\.import/.test(line)) {
-        assert.fail('dynamic import() not allowed — taps must be self-contained')
-      }
-    }
-  })
-
-  test(id, `[security] fetch URLs related to site "${site}"`, () => {
-    const fetchUrls = [...src.matchAll(/fetch\s*\(\s*["'`](https?:\/\/[^"'`\s]+)["'`]/g)]
-    for (const [, url] of fetchUrls) {
-      try {
-        const hostname = new URL(url).hostname.toLowerCase()
-        const siteLower = site.toLowerCase()
-        const isSiteRelated = hostname.includes(siteLower) || siteLower.includes(hostname.replace('www.', '').split('.')[0])
-        const isCommonCdn = /^(cdn|static|assets|api|img|media)\./i.test(hostname)
-        assert(isSiteRelated || isCommonCdn,
-          `fetch to "${hostname}" — tap for "${site}" should only access ${site}-related URLs`)
-      } catch { /* non-parseable URL, skip */ }
-    }
-  })
-
   // ===== COLUMNS (optional — runtime infers from first row if absent) =====
 
   if (tap.columns !== undefined) {
@@ -325,19 +233,79 @@ for (const { site, name, kind, path } of tapFiles) {
     })
   }
 
-  // ===== COMPOSITION =====
-  // handle.run("site", "name") references must resolve to existing taps.
+  // ===== SOURCE-LEVEL CHECKS (only apply to exec.fn strings) =====
+  // Native ops are static structured data — no JS source to security-check.
 
-  const tapCalls = [...src.matchAll(/(?:handle|tap|page)\.run\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']/g)]
-  for (const [, refSite, refName] of tapCalls) {
-    test(id, `[composition] handle.run("${refSite}", "${refName}") references existing tap`, () => {
-      // Resolve in either tier — showcase or community; either .tap.js or .tap.json counts
-      const found = TIERS.some(t =>
-        existsSync(join(TAPS_DIR, t, refSite, `${refName}.tap.js`)) ||
-        existsSync(join(TAPS_DIR, t, refSite, `${refName}.tap.json`)))
-      assert(found,
-        `${id} calls handle.run("${refSite}", "${refName}") but no ${refSite}/${refName}.tap.{js,json} exists in showcase/ or community/`)
+  if (tap.execSrc) {
+    const src = tap.execSrc
+
+    test(id, `exec.fn does not reference chrome.* directly`, () => {
+      assert(!src.includes('chrome.tabs'), 'must not reference chrome.tabs — use handle API')
+      assert(!src.includes('chrome.scripting'), 'must not reference chrome.scripting — use handle API')
+      assert(!src.includes('chrome.debugger'), 'must not reference chrome.debugger — use handle API')
     })
+
+    test(id, `[security] no eval() — use handle.eval() instead`, () => {
+      const lines = src.split('\n')
+      for (const line of lines) {
+        if (line.trimStart().startsWith('//')) continue
+        if (/\beval\s*\(/.test(line) && !line.includes('handle.eval') && !line.includes('tap.eval') && !line.includes('page.eval')) {
+          assert.fail(`eval() found — use handle.eval() for page-context execution`)
+        }
+      }
+    })
+
+    test(id, `[security] no new Function()`, () => {
+      assert(!/new\s+Function\s*\(/.test(src), 'new Function() not allowed — logic must be in tap source')
+    })
+
+    test(id, `[security] no base64 decoding (atob)`, () => {
+      assert(!/\batob\s*\(/.test(src), 'atob() not allowed — tap code must be readable')
+    })
+
+    test(id, `[security] no WebSocket`, () => {
+      assert(!/new\s+WebSocket\s*\(/.test(src), 'WebSocket not allowed — use handle.fetch()')
+    })
+
+    test(id, `[security] no XMLHttpRequest`, () => {
+      assert(!/XMLHttpRequest/.test(src), 'XMLHttpRequest not allowed — use handle.fetch()')
+    })
+
+    test(id, `[security] no dynamic import()`, () => {
+      const lines = src.split('\n')
+      for (const line of lines) {
+        if (/\bimport\s*\(/.test(line) && !/export\s+default/.test(line) && !/ObjC\.import/.test(line)) {
+          assert.fail('dynamic import() not allowed — taps must be self-contained')
+        }
+      }
+    })
+
+    test(id, `[security] fetch URLs related to site "${site}"`, () => {
+      const fetchUrls = [...src.matchAll(/fetch\s*\(\s*["'`](https?:\/\/[^"'`\s]+)["'`]/g)]
+      for (const [, url] of fetchUrls) {
+        try {
+          const hostname = new URL(url).hostname.toLowerCase()
+          const siteLower = site.toLowerCase()
+          const isSiteRelated = hostname.includes(siteLower) || siteLower.includes(hostname.replace('www.', '').split('.')[0])
+          const isCommonCdn = /^(cdn|static|assets|api|img|media)\./i.test(hostname)
+          assert(isSiteRelated || isCommonCdn,
+            `fetch to "${hostname}" — tap for "${site}" should only access ${site}-related URLs`)
+        } catch { /* non-parseable URL, skip */ }
+      }
+    })
+
+    // ===== COMPOSITION =====
+    // handle.run("site", "name") references must resolve to existing taps.
+
+    const tapCalls = [...src.matchAll(/(?:handle|tap|page)\.run\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']/g)]
+    for (const [, refSite, refName] of tapCalls) {
+      test(id, `[composition] handle.run("${refSite}", "${refName}") references existing tap`, () => {
+        const found = TIERS.some(t =>
+          existsSync(join(TAPS_DIR, t, refSite, `${refName}.tap.json`)))
+        assert(found,
+          `${id} calls handle.run("${refSite}", "${refName}") but no ${refSite}/${refName}.tap.json exists in showcase/ or community/`)
+      })
+    }
   }
 }
 

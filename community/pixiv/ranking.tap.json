@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/pixiv/ranking",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/pixiv/ranking",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "pixiv",
+    "name": "ranking",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = async (args) => {\n    const res = await fetch(\"https://www.pixiv.net/ranking.php?mode=daily&content=all&p=1&format=json\", { credentials: 'include' })\n    const data = await res.json()\n    const contents = data.contents || []\n    return contents.map(item => ({\n      rank: String(item.rank),\n      title: String(item.title),\n      author: String(item.user_name),\n      views: String(item.view_count)\n    }))\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Pixiv daily illustration ranking",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.974Z"
+}

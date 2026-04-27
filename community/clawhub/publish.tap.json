@@ -1,0 +1,55 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/clawhub/publish",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/clawhub/publish",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "clawhub",
+    "name": "publish",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    if (!args.slug || !args.skillFile) throw new Error('slug and skillFile are required')\n\n    await tap.nav('https://clawhub.ai/publish-skill')\n    await tap.wait(2000)\n\n    // Fill form fields via native setters\n    await tap.eval((slug, displayName, version) => {\n      function setInput(sel, val) {\n        const el = document.querySelector(sel);\n        if (!el || !val) return;\n        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;\n        setter.call(el, val);\n        el.dispatchEvent(new Event('input', { bubbles: true }));\n        el.dispatchEvent(new Event('change', { bubbles: true }));\n      }\n      setInput('#slug', slug);\n      setInput('#displayName', displayName || slug);\n      setInput('#version', version || '0.1.0');\n    }, args.slug, args.displayName, args.version)\n\n    // Strip webkitdirectory and upload file\n    await tap.eval(() => {\n      const input = document.querySelector('#upload-files');\n      if (input) {\n        input.removeAttribute('webkitdirectory');\n        input.removeAttribute('directory');\n      }\n    })\n    await tap.upload('#upload-files', args.skillFile)\n    await tap.wait(500)\n\n    // Trigger change event for file recognition\n    await tap.eval(() => {\n      document.querySelector('#upload-files')?.dispatchEvent(new Event('change', { bubbles: true }));\n    })\n    await tap.wait(500)\n\n    // Check agreement checkbox\n    await tap.click('input[type=\"checkbox\"]')\n\n    // Fill changelog\n    if (args.changelog) {\n      await tap.eval((text) => {\n        const ta = document.querySelector('#changelog');\n        if (!ta) return;\n        const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;\n        setter.call(ta, text);\n        ta.dispatchEvent(new Event('input', { bubbles: true }));\n      }, args.changelog)\n    }\n    await tap.wait(500)\n\n    // Click Publish\n    await tap.click('button.btn.btn-primary')\n    await tap.wait(5000)\n\n    const url = await tap.eval(() => location.href)\n    const published = url.includes('/leonting1010/') || url.includes('/publish')\n\n    return [{ status: published ? 'published' : 'check-browser', url: String(url) }]\n  \n}"
+      }
+    ],
+    "description": "Publish a skill to OpenClaw ClawHub",
+    "columns": [
+      "status",
+      "url"
+    ],
+    "args": {
+      "slug": {
+        "type": "string",
+        "description": "Skill slug (e.g. 'tap')"
+      },
+      "displayName": {
+        "type": "string",
+        "description": "Display name (e.g. 'Tap')"
+      },
+      "version": {
+        "type": "string",
+        "description": "Semver version (e.g. '0.1.0')"
+      },
+      "skillFile": {
+        "type": "string",
+        "description": "Absolute path to SKILL.md file"
+      },
+      "changelog": {
+        "type": "string",
+        "description": "Changelog text"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.999Z"
+}

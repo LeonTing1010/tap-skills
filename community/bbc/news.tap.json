@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/bbc/news",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/bbc/news",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "bbc",
+    "name": "news",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    const items = []\n    const seen = new Set()\n\n    // Strategy 1: modern BBC layout (2024+) with data-testid attributes\n    const cards = document.querySelectorAll('[data-testid=\"edinburgh-card\"], [data-testid=\"anchor-inner-wrapper\"]')\n    if (cards.length > 0) {\n      cards.forEach(card => {\n        const headlineEl = card.querySelector('[data-testid=\"card-headline\"], h3, h2')\n        const headline = headlineEl?.textContent?.trim() || ''\n        const summaryEl = card.querySelector('[data-testid=\"card-description\"], p')\n        const summary = summaryEl?.textContent?.trim() || ''\n        const sectionEl = card.querySelector('[data-testid=\"card-metadata-tag\"], span[class*=\"label\"]')\n        const section = sectionEl?.textContent?.trim() || ''\n        const link = card.closest('a')?.href || card.querySelector('a')?.href || ''\n\n        if (headline && !seen.has(headline)) {\n          seen.add(headline)\n          items.push({ headline, summary, section, link })\n        }\n      })\n      return items\n    }\n\n    // Strategy 2: promo blocks (older layout)\n    const promos = document.querySelectorAll('.gs-c-promo, .nw-c-promo, [class*=\"promo\"]')\n    promos.forEach(promo => {\n      const headlineEl = promo.querySelector('.gs-c-promo-heading__title, h3, .nw-o-link-split__text')\n      const headline = headlineEl?.textContent?.trim() || ''\n      const summaryEl = promo.querySelector('.gs-c-promo-summary, p.gs-c-promo-body')\n      const summary = summaryEl?.textContent?.trim() || ''\n      const sectionEl = promo.querySelector('.gs-c-section-link, .nw-c-promo-meta')\n      const section = sectionEl?.textContent?.trim() || ''\n      const link = promo.querySelector('a')?.href || ''\n\n      if (headline && !seen.has(headline)) {\n        seen.add(headline)\n        items.push({ headline, summary, section, link })\n      }\n    })\n\n    // Strategy 3: fallback — news article links\n    if (items.length < 5) {\n      const links = document.querySelectorAll('a[href*=\"/news/articles/\"], a[href*=\"/news/\"]')\n      links.forEach(a => {\n        const headline = a.textContent.trim()\n        const link = a.href || ''\n        if (headline && headline.length > 15 && headline.length < 300 && !seen.has(headline)) {\n          seen.add(headline)\n          const parent = a.closest('div') || a.parentElement\n          const summaryEl = parent?.querySelector('p')\n          const summary = summaryEl?.textContent?.trim() || ''\n          items.push({ headline, summary, section: '', link })\n        }\n      })\n    }\n\n    return items.slice(0, 30)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "BBC News top stories",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "headline"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.986Z"
+}

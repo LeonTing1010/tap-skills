@@ -1,0 +1,49 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/weather/forecast",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/weather/forecast",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "weather",
+    "name": "forecast",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const location = args.location || ''\n    const url = `https://wttr.in/${encodeURIComponent(location)}?format=j1`\n    const resp = await tap.fetch(url, { headers: { 'User-Agent': 'curl/8.0' } })\n    const data = JSON.parse(resp.body)\n\n    const current = data.current_condition?.[0] || {}\n    const area = data.nearest_area?.[0] || {}\n    const areaName = area.areaName?.[0]?.value || location || 'Unknown'\n    const country = area.country?.[0]?.value || ''\n\n    const rows = []\n\n    // Current conditions\n    rows.push({\n      day: 'Now',\n      location: `${areaName}, ${country}`,\n      temp_c: current.temp_C || '',\n      temp_f: current.temp_F || '',\n      feels_like_c: current.FeelsLikeC || '',\n      condition: current.weatherDesc?.[0]?.value || '',\n      humidity: current.humidity || '',\n      wind_kph: current.windspeedKmph || '',\n      wind_dir: current.winddir16Point || '',\n      precip_mm: current.precipMM || '',\n      uv_index: current.uvIndex || ''\n    })\n\n    // 3-day forecast\n    const forecasts = data.weather || []\n    forecasts.forEach(day => {\n      rows.push({\n        day: day.date || '',\n        location: `${areaName}, ${country}`,\n        temp_c: `${day.mintempC}-${day.maxtempC}`,\n        temp_f: `${day.mintempF}-${day.maxtempF}`,\n        feels_like_c: '',\n        condition: day.hourly?.[4]?.weatherDesc?.[0]?.value || '',\n        humidity: day.hourly?.[4]?.humidity || '',\n        wind_kph: day.hourly?.[4]?.windspeedKmph || '',\n        wind_dir: day.hourly?.[4]?.winddir16Point || '',\n        precip_mm: day.hourly?.[4]?.precipMM || '',\n        uv_index: day.hourly?.[4]?.uvIndex || ''\n      })\n    })\n\n    return rows\n  \n}"
+      }
+    ],
+    "description": "Weather forecast from wttr.in (defaults to auto-detected location)",
+    "columns": [
+      "day",
+      "location",
+      "temp_c",
+      "temp_f",
+      "feels_like_c",
+      "condition",
+      "humidity",
+      "wind_kph",
+      "wind_dir",
+      "precip_mm",
+      "uv_index"
+    ],
+    "args": {
+      "location": {
+        "type": "string",
+        "default": "",
+        "description": "City name or location (e.g. 'London', 'New+York')"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.012Z"
+}

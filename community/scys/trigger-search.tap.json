@@ -1,0 +1,33 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/scys/trigger-search",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/scys/trigger-search",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "scys",
+    "name": "trigger-search",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const result = await tap.eval(() => {\n      var allEls = document.querySelectorAll('*')\n      var vueApp = null\n      for (var i = 0; i < allEls.length; i++) {\n        var keys = Object.keys(allEls[i])\n        for (var j = 0; j < keys.length; j++) {\n          if (keys[j].indexOf('__vue_app__') === 0) { vueApp = allEls[i][keys[j]]; break }\n        }\n        if (vueApp) break\n      }\n      if (vueApp) {\n        var root = vueApp._instance\n        if (root && root.subTree && root.subTree.component) {\n          var comp = root.subTree.component\n          function findSearchComp(c, depth) {\n            if (!c || depth > 20) return null\n            if (c.exposed && c.exposed.search) return c.exposed\n            if (c.ctx && typeof c.ctx.search === 'function') return c.ctx\n            if (c.setupState && typeof c.setupState.search === 'function') return c.setupState\n            if (c.subTree && c.subTree.component) {\n              var found = findSearchComp(c.subTree.component, depth + 1)\n              if (found) return found\n            }\n            if (c.subTree && c.subTree.children) {\n              for (var k = 0; k < c.subTree.children.length; k++) {\n                var child = c.subTree.children[k]\n                if (child && child.component) {\n                  found = findSearchComp(child.component, depth + 1)\n                  if (found) return found\n                }\n              }\n            }\n            return null\n          }\n          var searchCtx = findSearchComp(comp, 0)\n          if (searchCtx && searchCtx.search) {\n            searchCtx.search()\n            return 'vue-method'\n          }\n        }\n      }\n      var svg = document.querySelector('svg.search-icon')\n      if (svg) { svg.dispatchEvent(new MouseEvent('click', { bubbles: true })); return 'svg-click' }\n      var form = document.querySelector('form.search-input')\n      if (form) { form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); return 'form-submit' }\n      return 'not-found'\n    })\n\n    await tap.wait(4000)\n\n    return [{ status: result, method: result }]\n  \n}"
+      }
+    ],
+    "description": "Trigger search on SCYS (Vue component method or form submit, requires login)",
+    "columns": [
+      "status",
+      "method"
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.997Z"
+}

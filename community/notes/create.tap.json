@@ -1,0 +1,51 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/notes/create",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/notes/create",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "notes",
+    "name": "create",
+    "intent": "write",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const result = await tap.eval(`\n      var app = Application(\"Notes\");\n      var title = ${JSON.stringify(args.title)};\n      var body = ${JSON.stringify(args.body)};\n\n      var htmlBody = \"<h1>\" + title + \"</h1>\" + body.replace(/\\\\n/g, \"<br>\");\n      var note = app.make({\n        new: \"note\",\n        at: app.defaultAccount().folders[0],\n        withProperties: { body: htmlBody }\n      });\n\n      JSON.stringify({\n        id: String(note.id()),\n        name: String(note.name()),\n        folder: String(app.defaultAccount().folders[0].name()),\n      });\n    `);\n\n    return result ? [result] : [];\n  \n}"
+      }
+    ],
+    "description": "Create a note in Apple Notes",
+    "columns": [
+      "id",
+      "name",
+      "folder"
+    ],
+    "args": {
+      "title": {
+        "type": "string",
+        "required": true,
+        "description": "Note title"
+      },
+      "body": {
+        "type": "string",
+        "required": true,
+        "description": "Note body"
+      },
+      "folder": {
+        "type": "string",
+        "default": "Notes",
+        "description": "Target folder"
+      }
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.003Z"
+}

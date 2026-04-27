@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/stackoverflow/hot",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/stackoverflow/hot",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "stackoverflow",
+    "name": "hot",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, _args) {\n\n    const data = await handle.fetch(\n      \"https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=50\",\n    );\n    return data.items.map((q, i) => ({\n      rank: String(i + 1),\n      title: q.title,\n      score: String(q.score),\n      answers: String(q.answer_count),\n      tags: q.tags.join(\", \"),\n    }));\n  \n}"
+      }
+    ],
+    "description": "StackOverflow hot questions",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.001Z"
+}

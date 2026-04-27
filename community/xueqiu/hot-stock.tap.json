@@ -1,0 +1,29 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/xueqiu/hot-stock",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/xueqiu/hot-stock",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "xueqiu",
+    "name": "hot-stock",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = async (args) => {\n    const res = await fetch('https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=50&_type=10&type=10', { credentials: 'include' })\n    const data = await res.json()\n    return (data.data.items || []).map((s, i) => ({\n      rank: String(i + 1),\n      title: String(s.name || ''),\n      code: String(s.code || ''),\n      percent: (s.percent >= 0 ? '+' : '') + s.percent.toFixed(2) + '%'\n    }))\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Xueqiu hot stocks"
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.004Z"
+}

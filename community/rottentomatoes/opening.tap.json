@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/rottentomatoes/opening",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/rottentomatoes/opening",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "rottentomatoes",
+    "name": "opening",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    const items = []\n    const seen = new Set()\n\n    // Strategy 1: discovery media list items (current RT layout 2024+)\n    const tiles = document.querySelectorAll(\n      '[data-qa=\"discovery-media-list-item\"], ' +\n      'div[class*=\"discovery-tiles\"] a, ' +\n      '[slot=\"caption\"]'\n    )\n    if (tiles.length > 0) {\n      // Walk the tile containers\n      const containers = document.querySelectorAll('[data-qa=\"discovery-media-list-item\"]')\n      containers.forEach(container => {\n        const titleEl = container.querySelector('span[data-qa=\"discovery-media-list-item-title\"]') ||\n                        container.querySelector('[class*=\"title\"]') ||\n                        container.querySelector('span')\n        const title = titleEl?.textContent?.trim() || ''\n\n        // Score — look for tomatometer\n        const scoreEl = container.querySelector('rt-text[slot=\"criticsScore\"], score-pairs rt-text, [slot=\"criticsScore\"]') ||\n                        container.querySelector('[class*=\"tomatometer\"], [class*=\"score\"]')\n        const score = scoreEl?.textContent?.trim() || ''\n\n        const link = container.querySelector('a[href*=\"/m/\"]')?.href || ''\n\n        if (title && !seen.has(title)) {\n          seen.add(title)\n          items.push({ title, score, link })\n        }\n      })\n      if (items.length > 0) return items\n    }\n\n    // Strategy 2: tile grid layout\n    const movieTiles = document.querySelectorAll(\n      'tiles-carousel-responsive-item, ' +\n      '[class*=\"media-list\"] li, ' +\n      '.discovery-tiles__wrap a[href*=\"/m/\"]'\n    )\n    movieTiles.forEach(tile => {\n      const titleEl = tile.querySelector('[class*=\"title\"], span, h3')\n      const title = titleEl?.textContent?.trim() || ''\n      const scoreEl = tile.querySelector('[class*=\"score\"], rt-text')\n      const score = scoreEl?.textContent?.trim() || ''\n      const link = tile.querySelector('a[href*=\"/m/\"]')?.href || tile.closest('a')?.href || ''\n\n      if (title && title.length > 1 && !seen.has(title)) {\n        seen.add(title)\n        items.push({ title, score, link })\n      }\n    })\n\n    // Strategy 3: broad fallback — movie links\n    if (items.length < 5) {\n      const allLinks = document.querySelectorAll('a[href*=\"/m/\"]')\n      allLinks.forEach(a => {\n        const title = a.textContent.trim()\n        const link = a.href || ''\n        if (title && title.length > 2 && title.length < 200 && !seen.has(title)) {\n          seen.add(title)\n          items.push({ title, score: '', link })\n        }\n      })\n    }\n\n    return items.slice(0, 30)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Rotten Tomatoes popular movies at home",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.991Z"
+}

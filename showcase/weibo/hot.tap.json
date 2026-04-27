@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/weibo/hot",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/weibo/hot",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "weibo",
+    "name": "hot",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, _args) {\n\n    const data = await handle.fetch(\"https://weibo.com/ajax/side/hotSearch\", {\n      headers: {\n        \"Referer\": \"https://weibo.com/\",\n        \"User-Agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36\",\n        \"Accept\": \"application/json\",\n      },\n    });\n    return data.data.realtime.map((item, i) => ({\n      rank: i + 1,\n      title: item.note,\n      hot: item.num || 0,\n    }));\n  \n}"
+      }
+    ],
+    "description": "Weibo hot search trending topics",
+    "health": {
+      "min_rows": 10,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.113Z"
+}

@@ -1,0 +1,45 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/arxiv/search",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/arxiv/search",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "arxiv",
+    "name": "search",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n\n    const params = new URLSearchParams({\n      search_query: \"all:\" + args.keyword,\n      start: \"0\",\n      max_results: \"20\",\n      sortBy: \"relevance\",\n      sortOrder: \"descending\",\n    })\n    // responseType: \"text\" because arXiv returns Atom XML\n    const xml = await tap.fetch(\n      \"https://export.arxiv.org/api/query?\" + params.toString(),\n      { responseType: \"text\" },\n    )\n    // Parse Atom XML entries with regex (no DOMParser in executor context)\n    const entries = String(xml).match(/<entry>([\\s\\S]*?)<\\/entry>/g) || []\n    return entries.map((entry, i) => {\n      const get = tag => {\n        const m = entry.match(new RegExp(`<${tag}[^>]*>([\\\\s\\\\S]*?)<\\\\/${tag}>`))\n        return m ? m[1].replace(/<[^>]+>/g, \"\").replace(/\\s+/g, \" \").trim() : \"\"\n      }\n      const authors = [...entry.matchAll(/<name>([\\s\\S]*?)<\\/name>/g)]\n        .map(m => m[1].trim()).join(\", \")\n      return {\n        rank: String(i + 1),\n        title: get(\"title\"),\n        authors,\n        published: get(\"published\").split(\"T\")[0],\n        abstract: get(\"summary\").substring(0, 300),\n        url: get(\"id\"),\n      }\n    })\n  \n}"
+      }
+    ],
+    "description": "Search arXiv papers",
+    "args": {
+      "keyword": {
+        "type": "string"
+      }
+    },
+    "health": {
+      "min_rows": 3,
+      "non_empty": [
+        "title"
+      ]
+    },
+    "examples": [
+      {
+        "keyword": "large language model"
+      }
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.013Z"
+}

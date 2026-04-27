@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/imdb/top",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/imdb/top",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "imdb",
+    "name": "top",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    const items = []\n\n    // Strategy 1: modern IMDB layout (2024+) using list items\n    const listItems = document.querySelectorAll('.ipc-metadata-list-summary-item')\n    if (listItems.length > 0) {\n      listItems.forEach((el, i) => {\n        const titleEl = el.querySelector('h3.ipc-title__text') || el.querySelector('a h3') || el.querySelector('h3')\n        let titleText = titleEl?.textContent?.trim() || ''\n        // Title often has format \"1. The Shawshank Redemption\"\n        const rankMatch = titleText.match(/^(\\d+)\\.\\s*(.+)/)\n        const rank = rankMatch ? rankMatch[1] : String(i + 1)\n        const title = rankMatch ? rankMatch[2] : titleText\n\n        // Year is in metadata spans\n        const spans = el.querySelectorAll('.cli-title-metadata span, .sc-b189961a-8 span')\n        const year = spans[0]?.textContent?.trim() || ''\n\n        // Rating\n        const ratingEl = el.querySelector('.ipc-rating-star--rating') ||\n                         el.querySelector('[data-testid=\"ratingGroup--imdb-rating\"] span')\n        const rating = ratingEl?.textContent?.trim() || ''\n\n        if (title) {\n          items.push({ rank, title, year, rating })\n        }\n      })\n      return items\n    }\n\n    // Strategy 2: legacy table layout\n    const rows = document.querySelectorAll('.lister-list tr, tbody.lister-list tr')\n    rows.forEach((row, i) => {\n      const titleEl = row.querySelector('.titleColumn a')\n      const title = titleEl?.textContent?.trim() || ''\n      const yearEl = row.querySelector('.titleColumn .secondaryInfo')\n      const year = yearEl?.textContent?.replace(/[()]/g, '').trim() || ''\n      const ratingEl = row.querySelector('.ratingColumn strong, .imdbRating strong')\n      const rating = ratingEl?.textContent?.trim() || ''\n      if (title) {\n        items.push({ rank: String(i + 1), title, year, rating })\n      }\n    })\n\n    // Strategy 3: generic fallback — find the list container\n    if (items.length === 0) {\n      const allLinks = document.querySelectorAll('a[href*=\"/title/tt\"]')\n      const seen = new Set()\n      let rank = 0\n      allLinks.forEach(a => {\n        const title = a.textContent.trim()\n        const href = a.getAttribute('href') || ''\n        if (title && title.length > 2 && title.length < 200 && !seen.has(href)) {\n          seen.add(href)\n          rank++\n          items.push({ rank: String(rank), title, year: '', rating: '' })\n        }\n      })\n    }\n\n    return items\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "IMDB Top 250 rated movies",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.007Z"
+}

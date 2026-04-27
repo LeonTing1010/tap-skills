@@ -1,0 +1,29 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/github/trending",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/github/trending",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "github",
+    "name": "trending",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    return Array.from(document.querySelectorAll('article.Box-row')).map(el => {\n      const repo = el.querySelector('h2 a')?.textContent?.trim().replace(/\\s+/g, '') || ''\n      const descEl = el.querySelector('p.col-9')\n      const description = descEl ? descEl.textContent.trim() : ''\n      const stars = el.querySelector('[href$=\"/stargazers\"]')?.textContent?.trim() || ''\n      const language = el.querySelector('[itemprop=\"programmingLanguage\"]')?.textContent?.trim() || ''\n      return { repo, description, stars, language }\n    }).filter(item => item.repo.length > 0)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "GitHub Trending repositories"
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-20T03:01:41.107Z"
+}

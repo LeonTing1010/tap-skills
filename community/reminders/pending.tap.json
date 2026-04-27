@@ -1,0 +1,36 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/reminders/pending",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/reminders/pending",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "reminders",
+    "name": "pending",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap) {\n\n    const items = await tap.eval(`\n      var app = Application(\"Reminders\");\n      var results = [];\n      var lists = app.lists();\n      for (var l = 0; l < lists.length; l++) {\n        var listName = String(lists[l].name());\n        var reminders = lists[l].reminders.whose({ completed: false })();\n        for (var i = 0; i < Math.min(reminders.length, 50); i++) {\n          var r = reminders[i];\n          var due = r.dueDate();\n          var dueStr = \"\";\n          if (due) {\n            dueStr = due.getFullYear() + \"-\" +\n              String(due.getMonth() + 1).padStart(2, \"0\") + \"-\" +\n              String(due.getDate()).padStart(2, \"0\");\n          }\n          results.push({\n            title: String(r.name()),\n            list: listName,\n            dueDate: dueStr,\n            priority: String(r.priority()),\n            notes: String(r.body() || \"\").substring(0, 200),\n          });\n        }\n      }\n      JSON.stringify(results);\n    `);\n\n    return items || [];\n  \n}"
+      }
+    ],
+    "description": "Incomplete reminders",
+    "columns": [
+      "title",
+      "list",
+      "dueDate",
+      "priority",
+      "notes"
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.014Z"
+}

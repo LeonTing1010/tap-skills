@@ -1,0 +1,36 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/sspai/hot",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/sspai/hot",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "sspai",
+    "name": "hot",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, _args) {\n\n    const data = await handle.fetch(\n      \"https://sspai.com/api/v1/article/hot/page/get?offset=0&limit=20&created_at=\" + Math.floor(Date.now() / 1000),\n    );\n    if (data.error !== 0 || !Array.isArray(data.data)) return [];\n    return data.data.map((a, i) => ({\n      rank: String(i + 1),\n      title: String(a.title || \"\"),\n      author: String(a.author?.nickname || \"\"),\n      likes: String(a.like_count || 0),\n      comments: String(a.comment_count || 0),\n      url: \"https://sspai.com/post/\" + a.id,\n    }));\n  \n}"
+      }
+    ],
+    "description": "Sspai trending articles",
+    "health": {
+      "min_rows": 5,
+      "non_empty": [
+        "title",
+        "author"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:01.976Z"
+}

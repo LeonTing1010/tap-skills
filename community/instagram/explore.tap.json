@@ -1,0 +1,35 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/instagram/explore",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/instagram/explore",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "instagram",
+    "name": "explore",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    const items = []\n    const seen = new Set()\n    for (const a of document.querySelectorAll('a[href*=\"/p/\"], a[href*=\"/reel/\"]')) {\n      const href = a.href\n      if (seen.has(href)) continue\n      seen.add(href)\n      const img = a.querySelector(\"img\")\n      const caption = img ? (img.alt || \"\").trim() : \"\"\n      items.push({\n        rank: String(items.length + 1),\n        caption: caption.substring(0, 200),\n        author: \"\",\n        likes: \"0\",\n      })\n    }\n    return items\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+      }
+    ],
+    "description": "Instagram Explore (requires login)",
+    "health": {
+      "min_rows": 3,
+      "non_empty": [
+        "caption"
+      ]
+    }
+  },
+  "generator": {
+    "id": "https://taprun.dev/migrate",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-04-27T03:50:02.014Z"
+}
