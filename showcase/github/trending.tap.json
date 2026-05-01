@@ -14,16 +14,88 @@
     "intent": "read",
     "ops": [
       {
-        "op": "exec",
-        "fn": "async function(handle, args) {\n\n    const url = typeof this.url === \"function\" ? this.url(args) : this.url;\n    if (url) await handle.nav(url);\n    if (this.waitFor) await handle.waitFor(this.waitFor);\n    const fn = (args) => {\n    return Array.from(document.querySelectorAll('article.Box-row')).map(el => {\n      const repo = el.querySelector('h2 a')?.textContent?.trim().replace(/\\s+/g, '') || ''\n      const descEl = el.querySelector('p.col-9')\n      const description = descEl ? descEl.textContent.trim() : ''\n      const stars = el.querySelector('[href$=\"/stargazers\"]')?.textContent?.trim() || ''\n      const language = el.querySelector('[itemprop=\"programmingLanguage\"]')?.textContent?.trim() || ''\n      return { repo, description, stars, language }\n    }).filter(item => item.repo.length > 0)\n  };\n    return await handle.eval(`(${fn.toString()})(${JSON.stringify(args)})`);\n  \n}"
+        "op": "compute",
+        "expr": "$fromMillis($millis() - args.days * 86400000) ~> $substring(0, 10)",
+        "save": "since"
+      },
+      {
+        "op": "compute",
+        "expr": "'created:>' & since & ' stars:>=' & $string(args.min_stars)",
+        "save": "q"
+      },
+      {
+        "op": "fetch",
+        "url": "https://api.github.com/search/repositories?q={{$encodeUrlComponent(q)}}&sort=stars&order=desc&per_page={{args.per_page}}",
+        "headers": {
+          "Accept": "application/vnd.github.v3+json"
+        },
+        "format": "json",
+        "save": "data"
+      },
+      {
+        "op": "compute",
+        "expr": "data.items ? data.items : []",
+        "save": "raw"
+      },
+      {
+        "op": "filter",
+        "on": "raw",
+        "expr": "$contains($lowercase(($exists(description) ? description : '') & ' ' & $join(($exists(topics) ? topics : []), ' ')), /\\b(ai|saas|llm|ml|gpt|chatbot|automation|api|dashboard|analytics|productivity|finance|health|education|devtool|developer|seo|crm|workflow|ecommerce)\\b/)"
+      },
+      {
+        "op": "project",
+        "shape": {
+          "slug": "$string(full_name)",
+          "description": "$substring($string(($exists(description) ? description : '')), 0, 200)",
+          "stars": "$string(stargazers_count)",
+          "language": "$string(($exists(language) ? language : ''))",
+          "topics": "$join(($exists(topics) ? topics : []), ',')",
+          "created_at": "$string(created_at)",
+          "url": "$string(html_url)"
+        }
       }
     ],
-    "description": "GitHub Trending repositories"
+    "description": "GitHub repos created in the last N days with ≥ min_stars, filtered to AI/SaaS/devtool niches via topic+description keyword match. Supply-side signal for solo builder category emergence.",
+    "columns": [
+      "slug",
+      "description",
+      "stars",
+      "language",
+      "topics",
+      "created_at",
+      "url"
+    ],
+    "args": {
+      "days": {
+        "type": "int",
+        "default": 7,
+        "description": "Lookback window in days"
+      },
+      "min_stars": {
+        "type": "int",
+        "default": 5,
+        "description": "Minimum stars to include"
+      },
+      "per_page": {
+        "type": "int",
+        "default": 50,
+        "description": "Max results from API"
+      }
+    },
+    "health": {
+      "min_rows": 1,
+      "non_empty": [
+        "slug"
+      ]
+    },
+    "examples": [
+      {}
+    ]
   },
   "generator": {
     "id": "https://taprun.dev/migrate",
     "type": "SoftwareAgent",
-    "version": "1"
+    "version": "declared-source"
   },
-  "created": "2026-04-20T03:01:41.107Z"
+  "created": "2026-04-20T03:01:41.157Z"
 }

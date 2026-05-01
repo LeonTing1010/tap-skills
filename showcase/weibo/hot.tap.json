@@ -14,22 +14,47 @@
     "intent": "read",
     "ops": [
       {
+        "op": "nav",
+        "url": "https://s.weibo.com/top/summary"
+      },
+      {
+        "op": "waitFor",
+        "selector": "table, .list_a, .td-02",
+        "timeout_ms": 15000
+      },
+      {
+        "op": "wait",
+        "ms": 800
+      },
+      {
+        "op": "compute",
+        "expr": "($exists(args.limit) ? args.limit : 50)",
+        "save": "limit"
+      },
+      {
         "op": "exec",
-        "fn": "async function(handle, _args) {\n\n    const data = await handle.fetch(\"https://weibo.com/ajax/side/hotSearch\", {\n      headers: {\n        \"Referer\": \"https://weibo.com/\",\n        \"User-Agent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36\",\n        \"Accept\": \"application/json\",\n      },\n    });\n    return data.data.realtime.map((item, i) => ({\n      rank: i + 1,\n      title: item.note,\n      hot: item.num || 0,\n    }));\n  \n}"
+        "fn": "async function(handle, args) {\nconst limit = args.limit || 50;\nreturn await handle.eval((limitArg) => {\n      const out = [];\n      const rows = document.querySelectorAll(\"table tbody tr, #pl_top_realtimehot table tbody tr\");\n      for (const tr of rows) {\n        if (out.length >= limitArg) break;\n        const cells = tr.querySelectorAll(\"td\");\n        if (cells.length < 2) continue;\n        // Column layout: [rank, title+tags, hot-value]\n        const rankEl = cells[0];\n        const titleCell = cells[1];\n        const hotCell = cells[2];\n        const link = titleCell.querySelector(\"a\");\n        const title = (link?.textContent || titleCell.textContent || \"\").trim();\n        const href = link?.getAttribute(\"href\") || \"\";\n        const url = href ? (href.startsWith(\"http\") ? href : \"https://s.weibo.com\" + href) : \"\";\n        const rankText = (rankEl?.textContent || \"\").trim();\n        // Skip the sticky \"\u7f6e\u9876\" / ad row if no rank number\n        if (!title) continue;\n        // Tag (\u65b0/\u70ed/\u6cb8/\u8350 etc.) usually in a span inside titleCell\n        const tagEl = titleCell.querySelector(\"span, i\");\n        const tag = (tagEl?.textContent || \"\").trim();\n        const hot = ((hotCell?.textContent) || \"\").trim();\n        out.push({\n          rank: rankText || String(out.length + 1),\n          title,\n          tag,\n          hot,\n          url,\n        });\n      }\n      return out;\n    }, limit);\n}"
       }
     ],
-    "description": "Weibo hot search trending topics",
+    "description": "Weibo \u70ed\u641c\u699c \u2014 SSR-rendered table, public/anonymous access.",
+    "args": {
+      "limit": {
+        "type": "int",
+        "default": 50
+      }
+    },
     "health": {
-      "min_rows": 10,
+      "min_rows": 20,
       "non_empty": [
         "title"
       ]
-    }
+    },
+    "allowUnverifiable": true
   },
   "generator": {
     "id": "https://taprun.dev/migrate",
     "type": "SoftwareAgent",
-    "version": "1"
+    "version": "declared-source"
   },
-  "created": "2026-04-20T03:01:41.113Z"
+  "created": "2026-04-20T03:01:41.226Z"
 }
