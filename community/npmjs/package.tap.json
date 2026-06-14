@@ -1,0 +1,58 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/anno.jsonld",
+    "https://taprun.dev/ns/tap-v1"
+  ],
+  "id": "https://taprun.dev/taps/npmjs/package",
+  "type": "Annotation",
+  "motivation": "tap:executing",
+  "target": "https://taprun.dev/taps/npmjs/package",
+  "body": {
+    "type": "tap:ExecutionPlan",
+    "site": "npmjs",
+    "name": "package",
+    "intent": "read",
+    "ops": [
+      {
+        "op": "exec",
+        "fn": "async function(tap, args) {\n  const packageName = args.package || \"@xquik/tweetclaw\"\n  const encoded = encodeURIComponent(packageName)\n  const data = await tap.fetch(`https://registry.npmjs.org/${encoded}`)\n  const latestVersion = data[\"dist-tags\"]?.latest || \"\"\n  const latest = latestVersion ? data.versions?.[latestVersion] || {} : {}\n  const repository = typeof latest.repository === \"string\"\n    ? latest.repository\n    : latest.repository?.url || data.repository?.url || \"\"\n  const normalizedRepository = repository\n    .replace(/^git\\+/, \"\")\n    .replace(/\\.git$/, \"\")\n  const openclawSpec = latest.openclaw?.install?.npmSpec || data.openclaw?.install?.npmSpec || \"\"\n  return [{\n    name: data.name || packageName,\n    version: latest.version || latestVersion,\n    description: latest.description || data.description || \"\",\n    license: latest.license || data.license || \"\",\n    npm_install: `npm install ${data.name || packageName}`,\n    openclaw_install: openclawSpec ? `openclaw plugins install npm:${openclawSpec}` : \"\",\n    repository: normalizedRepository,\n    homepage: latest.homepage || data.homepage || \"\",\n    keywords: Array.isArray(latest.keywords) ? latest.keywords.join(\", \") : \"\"\n  }]\n}"
+      }
+    ],
+    "description": "npm package metadata with OpenClaw plugin install info when available",
+    "columns": [
+      "name",
+      "version",
+      "description",
+      "license",
+      "npm_install",
+      "openclaw_install",
+      "repository",
+      "homepage",
+      "keywords"
+    ],
+    "args": {
+      "package": {
+        "type": "string",
+        "description": "npm package name, such as @xquik/tweetclaw"
+      }
+    },
+    "health": {
+      "min_rows": 1,
+      "non_empty": [
+        "name",
+        "version"
+      ]
+    },
+    "examples": [
+      {
+        "package": "@xquik/tweetclaw"
+      }
+    ]
+  },
+  "generator": {
+    "id": "https://taprun.dev/contrib",
+    "type": "SoftwareAgent",
+    "version": "1"
+  },
+  "created": "2026-06-14T09:38:54Z"
+}

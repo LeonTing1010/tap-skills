@@ -189,6 +189,7 @@ tap github trending                               # Run any skill
 | Site | Skill | Description |
 |------|-------|-------------|
 | npm | `npmjs/popular` | Most popular packages |
+| npm | `npmjs/package` | Package metadata and OpenClaw install info |
 | PyPI | `pypi/top` | Top Python packages |
 | Crates.io | `crates/popular` | Popular Rust packages |
 | Pixiv | `pixiv/ranking` | Daily illustration ranking |
