@@ -1,0 +1,117 @@
+name: reverify
+
+# Nightly re-verification of every claim in claims/.
+# Each claim's plan.json is a deterministic Tap plan — replay costs zero
+# LLM tokens, which is why this repo can afford to prove itself alive
+# every night. Receipts carry verification metadata only, never scraped
+# content.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reverify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run every claim, write receipts, rebuild ledger
+        run: |
+          set -euo pipefail
+          export TZ=UTC
+          TODAY=$(date -u +%F)
+          mkdir -p ~/.tap/plans
+
+          python3 - "$TODAY" <<'PY'
+          import json, pathlib, subprocess, sys, os
+
+          today = sys.argv[1]
+          rows = []
+          failed = False
+
+          for claim_dir in sorted(pathlib.Path("claims").iterdir()):
+              plan_file = claim_dir / "plan.json"
+              if not plan_file.is_file():
+                  continue
+              plan = json.loads(plan_file.read_text())
+              site, name = plan["id"]["site"], plan["id"]["name"]
+
+              # install the vendored plan into the live registry
+              reg = pathlib.Path.home() / ".tap" / "plans" / site
+              reg.mkdir(parents=True, exist_ok=True)
+              (reg / f"{name}.plan.json").write_text(plan_file.read_text())
+
+              # zero-token deterministic replay
+              proc = subprocess.run(
+                  ["npx", "-y", "@taprun/cli", f"{site}/{name}"],
+                  capture_output=True, text=True, timeout=300,
+              )
+              status, receipt = "🟡 drifted", {
+                  "date": today, "claim": claim_dir.name,
+                  "exit_code": proc.returncode, "runner": "github-actions",
+              }
+              if proc.returncode == 0:
+                  try:
+                      run = json.loads(proc.stdout)
+                      ret = run.get("return") or {}
+                      receipt |= {
+                          "state": run.get("state"),
+                          "outcome": ret.get("outcome"),
+                          "plan_hash": run.get("plan_hash"),
+                          # claim-specific verification fields (metadata, not content)
+                          "api_directory_has_trending": ret.get("api_directory_has_trending"),
+                          "repo_count": ret.get("repo_count"),
+                      }
+                      if run.get("state") == "committed" and ret.get("outcome") == "ok":
+                          status = "🟢 verified"
+                  except json.JSONDecodeError:
+                      receipt["error"] = "unparseable run output"
+              else:
+                  receipt["error"] = (proc.stderr or proc.stdout)[-2000:]
+
+              if status != "🟢 verified":
+                  failed = True
+
+              rdir = claim_dir / "receipts"
+              rdir.mkdir(exist_ok=True)
+              (rdir / f"{today}.json").write_text(json.dumps(receipt, indent=2) + "\n")
+
+              published = claim_dir.name[:10]
+              title_line = (claim_dir / "CLAIM.md").read_text().splitlines()[0]
+              title = title_line.lstrip("# ").removeprefix("Claim: ")
+              rows.append(
+                  f"| [{title}]({claim_dir}/CLAIM.md) | {published} | {today} | {status} |"
+              )
+
+          ledger = "\n".join([
+              "| Claim | Published | Last verified | Status |",
+              "|---|---|---|---|",
+              *rows,
+          ])
+          readme = pathlib.Path("README.md").read_text()
+          start, end = "<!--LEDGER-->", "<!--/LEDGER-->"
+          pre, rest = readme.split(start, 1)
+          _, post = rest.split(end, 1)
+          pathlib.Path("README.md").write_text(pre + start + "\n" + ledger + "\n" + end + post)
+
+          # a drifted claim is information, not a broken build — receipts
+          # and the flipped ledger row ARE the alarm. Exit 0 either way.
+          print("ledger rebuilt;", "DRIFT DETECTED" if failed else "all green")
+          PY
+
+      - name: Commit receipts + ledger
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add claims README.md
+          git diff --cached --quiet || git commit -m "reverify: $(date -u +%F) receipts"
+          git push

@@ -1,0 +1,30 @@
+{
+  "id": { "site": "github", "name": "trending-no-api" },
+  "description": "CLAIM: GitHub Trending has NO official API. Evidence op 1: GitHub's own REST API root directory (api.github.com — the machine-readable index of every endpoint template) contains no 'trending' entry (expect gate fails the run the day GitHub ships one). Evidence op 2+3: the HTML page at github.com/trending is therefore the only first-party source — fetched raw and parsed engine-inline (deno-dom) at Source Ladder L4, a downgrade forced by the proven absence of L1 (that absence IS this claim). Tab-free: no browser, no login, no extension — runs anywhere including CI. Returns {outcome, reason, api_directory_has_trending, repo_count, repos}.",
+  "args": {},
+  "observe": [
+    {
+      "op": "fetch",
+      "url": "https://api.github.com/",
+      "format": "text",
+      "save": "api_root",
+      "expect": "!result.contains(\"trending\") && !result.contains(\"Trending\")"
+    },
+    {
+      "op": "fetch",
+      "url": "https://github.com/trending",
+      "format": "text",
+      "save": "page",
+      "expect": "result.contains(\"rending\")"
+    },
+    {
+      "op": "extract",
+      "root": "article.Box-row",
+      "per_item": { "repo": { "selector": "h2 a", "attr": "href" } },
+      "save": "repos"
+    }
+  ],
+  "return": "{'outcome': dyn(size(observe.repos) > 0 ? 'ok' : 'empty'), 'reason': dyn(size(observe.repos) > 0 ? '' : 'trending page markup drifted — article.Box-row h2 a matched nothing'), 'api_directory_has_trending': dyn(observe.api_root.contains('trending')), 'repo_count': dyn(double(size(observe.repos))), 'repos': dyn(observe.repos)}",
+  "source_url": "https://github.com/trending",
+  "source_intent": "Prove nightly that GitHub Trending has no official API (api.github.com directory contains no trending endpoint) and that the HTML page remains the only first-party source, by deterministically extracting the current trending repos from it at zero tokens."
+}
