@@ -1,0 +1,11 @@
+{
+  "date": "2026-07-16",
+  "claim": "2026-07-11-github-trending-has-no-api",
+  "exit_code": 0,
+  "runner": "github-actions",
+  "state": "committed",
+  "outcome": "ok",
+  "plan_hash": "a108ca7355320beb35e8a9d79ff1a18cc0feaf07f4686c3bd76176f92cced021",
+  "api_directory_has_trending": false,
+  "repo_count": 13
+}
