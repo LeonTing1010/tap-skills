@@ -29,7 +29,7 @@ A claim that drifts flips to 🟡 in the table below — automatically, publicly
 <!--LEDGER-->
 | Claim | Published | Last verified | Status |
 |---|---|---|---|
-| [GitHub Trending has no official API](claims/2026-07-11-github-trending-has-no-api/CLAIM.md) | 2026-07-11 | 2026-07-24 | 🟢 verified |
+| [GitHub Trending has no official API](claims/2026-07-11-github-trending-has-no-api/CLAIM.md) | 2026-07-11 | 2026-07-25 | 🟢 verified |
 <!--/LEDGER-->
 
 ## Verify a claim yourself
