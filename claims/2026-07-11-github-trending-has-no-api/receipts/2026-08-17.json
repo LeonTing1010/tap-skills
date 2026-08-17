@@ -1,0 +1,7 @@
+{
+  "date": "2026-08-17",
+  "claim": "2026-07-11-github-trending-has-no-api",
+  "exit_code": 1,
+  "runner": "github-actions",
+  "error": "{\n  \"ok\": false,\n  \"kind\": \"tap_not_found\",\n  \"message\": \"tap not found: github/trending-no-api\",\n  \"detail\": {\n    \"site\": \"github\",\n    \"name\": \"trending-no-api\"\n  },\n  \"next\": {\n    \"tool\": \"capture\",\n    \"args\": {\n      \"site\": \"github\",\n      \"name\": \"trending-no-api\"\n    },\n    \"why\": \"create a new tap from a URL (or re-capture to overwrite a drifted one)\"\n  }\n}\n"
+}
