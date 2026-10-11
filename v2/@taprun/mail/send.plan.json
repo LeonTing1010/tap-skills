@@ -1,0 +1,61 @@
+{
+  "id": { "site": "mail", "name": "send" },
+  "description": "Send plain-text transactional email via Resend HTTP API. Requires RESEND_API_KEY in ~/.tap/secrets and a verified sender domain in your Resend account. Concurrency: dedup via intent_key (from|to|subject|text); duplicate within dedup_ttl returns the prior result without re-sending. Verify via confirm phase (GET /emails/{id}).",
+  "args": {
+    "from": {
+      "type": "string",
+      "required": true,
+      "description": "Sender address. Must be on a domain you have verified in Resend."
+    },
+    "to": {
+      "type": "string",
+      "required": true,
+      "description": "Recipient address."
+    },
+    "subject": {
+      "type": "string",
+      "required": true,
+      "description": "Email subject line."
+    },
+    "text": {
+      "type": "string",
+      "required": true,
+      "description": "Plain-text email body. HTML body support deferred to a follow-up tap (mail/send_html) — keep this tap minimal."
+    }
+  },
+  "act": [
+    {
+      "op": "fetch",
+      "url": "https://api.resend.com/emails",
+      "method": "POST",
+      "credentials": "deno-host",
+      "headers": {
+        "Authorization": "Bearer ${RESEND_API_KEY}",
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "from": "{{$args.from}}",
+        "to": "{{$args.to}}",
+        "subject": "{{$args.subject}}",
+        "text": "{{$args.text}}"
+      },
+      "format": "json"
+    }
+  ],
+  "key": "'mail/send:' & $args.from & '|' & $args.to & '|' & $args.subject & '|' & $args.text",
+  "confirm": [
+    {
+      "op": "fetch",
+      "url": "https://api.resend.com/emails/{{$act.id}}",
+      "method": "GET",
+      "credentials": "deno-host",
+      "headers": {
+        "Authorization": "Bearer ${RESEND_API_KEY}"
+      },
+      "format": "json"
+    }
+  ],
+  "postcondition": "$exists($confirm.id) and $confirm.id = $act.id",
+  "dedup_ttl_seconds": 3600,
+  "return": "$act.id"
+}
